@@ -1,48 +1,57 @@
 #include "stm32f10x.h"
 
-volatile uint32_t msTicks;                       /* timeTicks counter */
+#define STACK_TOP 0x20002000										/* This can move quite a lot ! */
 
-GPIO_InitTypeDef theLedType = {GPIO_Pin_5, GPIO_Speed_10MHz, GPIO_Mode_Out_PP};
+volatile uint32_t msTicks;                       /* timeTicks counter */
 
 void SysTick_Handler(void) {
   msTicks++;                                     /* increment timeTicks counter */
 }
 
+
+void nmi_handler(void);												
+void hardfault_handler(void);
+void delay(void);
+int main(void);
+
+/*	Four vectors - the starting stack pointer value, code entry point and NMI and Hard-Fault handlers */
 __INLINE static void Delay (uint32_t dlyTicks) {
   uint32_t curTicks = msTicks;
 
   while ((msTicks - curTicks) < dlyTicks);
 }
 
-__INLINE static void LED_Config(void) {
-	GPIO_Init(GPIOB, &theLedType);		/* Configure the LEDs */
-}
 
-__INLINE static void LED_On (uint32_t led) {
-	GPIO_SetBits(GPIOB, GPIO_Pin_5);	/* Turn On  LED */
-}
+unsigned int * myvectors[4] 
+__attribute__ ((section("vectors")))= {
+    (unsigned int *)	STACK_TOP,         
+    (unsigned int *) 	main,                
+};
 
-__INLINE static void LED_Off (uint32_t led) {
-	GPIO_ResetBits(GPIOB, GPIO_Pin_5);	/* Turn Off LED */
-}
 
-int main (void) {
-  if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
-    ;                                            /* Handle Error */
-    //while (1);
-  }
-  
-  LED_Config();                                  /* configure the LEDs */                            
+int main(void){	
+	int n = 0;
+	int button;
+
+	RCC->APB2ENR |= 0x10 | 0x04 | 0x08;/* Enable the GPIOA (bit 2) and GPIOC (bit 8)  and GPIOB*/
+	GPIOB->CRL = 0x00100000;	//set GIPOB-5 to out
+
+   
+		//						/* A short delay */
+						/* Copy bit 0 of counter into GPIOC:Pin 5 */
  
-  while(1){
-	GPIO_SetBits(GPIOB, GPIO_Pin_5);
-	Delay (1000);
-  }
+ 	while(1)
+    {
+		Delay (500);                                 /* delay  100 Msec    */
+		GPIOB->BSRR = 1<<5 ;
+		Delay (500);                                 /* delay  100 Msec    */
+    }
+}
 
-  while(1) {
-    LED_On (0x100);                              /* Turn  on the LED   */
-    Delay (1000);                                 /* delay  100 Msec    */
-    LED_Off (0x100);                             /* Turn off the LED   */
-    Delay (1000);                                 /* delay  100 Msec    */
-  }
+void delay(void) 
+{
+	int i = 10000000;							/* About 1/4 second delay */
+	while (i-- > 0) {
+		asm("nop");						/* This stops it optimising code out */
+	}
 }
