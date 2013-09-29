@@ -4,6 +4,31 @@
 //define a counter for the delay 
 volatile uint32_t msTicks;
 
+//define the system init function
+void init(){
+	//to do: set RCC_CR  Clock control register
+
+	//to do: set RCC_CFGR Clock configuration register
+
+	//to do: set RCC_CIR Clock interrupt register
+
+	//to do: APB2 peripheral reset register (RCC_APB2RSTR) (maybe)
+
+	//to do: APB1 peripheral reset register (RCC_APB1RSTR) (maybe)
+
+	//to do: AHB peripheral clock enable register (RCC_AHBENR) (maybe)
+
+	//to do: APB2 peripheral clock enable register (RCC_APB2ENR) (maybe)
+
+	//to do: APB1 peripheral clock enable register (RCC_APB1ENR)
+
+	//to do: Backup domain control register (RCC_BDCR)
+
+	//to do: Control/status register (RCC_CSR)
+
+}
+
+
 //increment the counter
 void SysTick_Handler(void) {
   msTicks++;
@@ -18,11 +43,13 @@ __INLINE static void Delay (uint32_t dlyTicks) {
 }
 
 int main(void){	
-	 if (SysTick_Config (SystemCoreClock / 1000)) {
-         //Setup the system interrupt to once 1ms
-         ;                                          
-    while (1);
-  }
+	init();
+
+	if (SysTick_Config (SystemCoreClock / 1000)) {
+        //Setup the system interrupt to once 1ms
+        ;                                          
+		while (1);
+	}
   
     //GPIOB-5 is the LED!
 	RCC->APB2ENR |=0x08;// Enable  GPIOB
