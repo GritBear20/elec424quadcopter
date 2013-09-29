@@ -1,8 +1,17 @@
 #include "stm32f10x.h"
-
+#include "lab2.h"
 
 //define a counter for the delay 
 volatile uint32_t msTicks;
+
+//define additional values
+unsigned char emergencyChar;
+unsigned char calculateOrientationChar;
+MotorSpeeds motorSpeedsPtr;
+int cnt10;   //detectEmergency
+int cnt100;  //refreshSensorData
+int cnt1000; //for green led calculateOrientation,updatePid
+int cnt2000; //for red led
 
 //define the system init function
 //use HSE to drive PLL as system clock frequency
@@ -95,6 +104,17 @@ void initHSE(){
 	}
 }
 
+//manual scheduler
+//it is called every 10ms
+void manualSchedule(void){
+	//this is executed 10ms each time with highest priority	
+	emergencyChar =  detectEmergency(); 
+	
+
+	calculateOrientationChar = calculateOrientationChar = calculateOrientation(); 
+	updatePid(&p_motorSpeedsPtr);
+}
+
 
 //increment the counter
 void SysTick_Handler(void) {
@@ -128,9 +148,7 @@ int main(void){
 
  	while(1)
     {
-		Delay (500);                                //delay 0.5 sec
-		GPIOB->BSRR = 1<<5 ;//set the 5th bit to one so pin 5 is on
-		Delay (500);                                //delay 0.5 sec
-		GPIOB->BSRR = 1<<21;//set the 21th bit to one so pin5 is off
+		Delay (10); 
+		manualSchedule();
     }
 }
