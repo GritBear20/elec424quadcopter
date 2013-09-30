@@ -5,13 +5,13 @@
 volatile uint32_t msTicks;
 
 //define additional values
-unsigned char emergencyChar;
-unsigned char calculateOrientationChar;
 MotorSpeeds motorSpeedsPtr;
-int cnt10;   //detectEmergency
-int cnt100;  //refreshSensorData
-int cnt1000; //for green led calculateOrientation,updatePid
-int cnt2000; //for red led
+uint32_t cnt10ms;
+uint32_t cnt100ms;
+uint32_t cnt1000ms1;
+uint32_t cnt1000ms2;
+uint32_t cnt1000ms3;
+uint32_t cnt2000ms;
 
 //define the system init function
 //use HSE to drive PLL as system clock frequency
@@ -104,15 +104,53 @@ void initHSE(){
 	}
 }
 
+void switchGreenLed(void){}
+void switchRedLed(void){}
+
 //manual scheduler
 //it is called every 10ms
 void manualSchedule(void){
-	//this is executed 10ms each time with highest priority	
-	emergencyChar =  detectEmergency(); 
+	//check tasks
+	//1st, every 10second run the detectEmergency
+	if(cnt10ms - msTicks >= 10){
+		cnt10ms = msTicks;
+		//since it has the highest priority, it gets executed immediately
+		detectEmergency(); 
+	}
 	
+	//2nd, every 100second run the refreshSensorData
+	else if(cnt100ms - msTicks > 100){
+		cnt100ms = msTicks;
+		//this gets executed secondarily
+		refreshSensorData();
+	}
 
-	calculateOrientationChar = calculateOrientationChar = calculateOrientation(); 
-	updatePid(&p_motorSpeedsPtr);
+	//3rd, calculateOrientation at once every second
+	else if(cnt1000ms1 - msTicks > 1000){
+		//need to further make sure that it doesn't collide with the other two tasks
+		if(cnt100ms - msTicks < 96 && cnt10ms - msTicks < 6){
+			cnt1000ms1 = msTicks;
+			calculateOrientation();
+		}
+	}
+	//4th, updatePid at onces every second
+	else if(cnt1000ms2 - msTicks > 1000){
+		cnt1000ms2 = msTicks;
+		updatePid(&motorSpeedsPtr);
+	}
+	//5th, blink Green LED at 0.5Hz, (on for 1 second, off for 1 sec)
+	else if(cnt1000ms3 - msTicks > 1000){
+		cnt1000ms3 = msTicks;
+		switchGreenLed();
+	}
+	//6th, blink Red LED at 0.25Hz, (on for 2 second, off for 2 sec)
+	else if(cnt2000ms - msTicks > 2000){
+		cnt2000ms = msTicks;
+		switchRedLed();
+	}else{
+		logDebugInfo();
+	}
+	
 }
 
 
@@ -133,22 +171,26 @@ int main(void){
 	//using HSE to drive PLL
 	//PLL is system clock and it is set at 72MHz
 	initHSE(); 
-		
+
 	if (SysTick_Config (SystemCoreClock / 1000)) {
         //Setup the system interrupt to once 1ms
         ;                                          
 		while (1);
 	}
   
-    //GPIOB-5 is the LED!
+    	//GPIOB-5 is the LED!
 	RCC->APB2ENR |=0x08;// Enable  GPIOB
 	GPIOB->CRL = 0x00100000;	//set GIPOB-5 to output
 
-   
-
  	while(1)
     {
-		Delay (10); 
+		//minimize 
+		cnt10ms = msTicks;
+		cnt100ms = msTicks + 1;
+		cnt1000ms1 = msTicks + 2;
+		cnt1000ms2 = msTicks + 3;
+		cnt1000ms3 = msTicks + 4;
+		cnt2000ms = msTicks + 5;
 		manualSchedule();
     }
 }
