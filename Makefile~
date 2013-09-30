@@ -21,10 +21,6 @@ CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP)
 all:
 	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c system_stm32f10x.h blinky.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
 
-system_stm32f10x.o: system_stm32f10x.c system_stm32f10x.h
-		$(CC) -c system_stm32f10x.c
-
-
 clean:
 	rm -rf *o blinky
 
