@@ -135,7 +135,8 @@ int main(void)
     ;                                            /* Handle Error */
     while (1);
   }
-  SystemInit();
+  //SystemInit();
+   initHSE();
   /* System Clocks Configuration */
   RCC_Configuration();
 
@@ -151,18 +152,18 @@ int main(void)
   while (1)
   {	SetMotor(4,0);
 	SetMotor(1,Speed);
-	Delay(2000);
+	Delay(1000);
 	//GPIOB->BSRR=1<<5;
  	SetMotor(1,0);
 	SetMotor(2,Speed);
-	Delay(2000);
+	Delay(1000);
 	SetMotor(2,0);
 	SetMotor(3,Speed);
-	Delay(2000);
+	Delay(1000);
 	//GPIOB->BSRR=1<<21;
 	SetMotor(3,0);
 	SetMotor(4,Speed);
-	Delay(2000);
+	Delay(1000);
 	}
 }
 
