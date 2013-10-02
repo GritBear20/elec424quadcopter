@@ -213,7 +213,7 @@ void Config_Timer(void){
     Timer duty cycle = (TIM_CCR/ TIM_ARR)* 100
   ----------------------------------------------------------------------- */
   /* Compute the prescaler value */
-  PrescalerValue = (uint16_t) (SystemCoreClock / 72000000) - 1;//72MHZ
+  PrescalerValue = (uint16_t) (SystemCoreClock / 36000000) - 1;//Timer 3 =  36MHZ
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = 665;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
