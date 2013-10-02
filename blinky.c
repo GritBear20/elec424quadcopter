@@ -282,10 +282,10 @@ void GPIO_Configuration(void)
 
 void UpdateMotor(void){
         //SetMotor(1,30);
-	SetMotor(1,MAXSPEED);
-	SetMotor(2,scaling*(unsigned int)motorSpeeds.m2);
-	SetMotor(3,scaling*(unsigned int)motorSpeeds.m3);
-	SetMotor(4,scaling*(unsigned int)motorSpeeds.m4);
+	SetMotor(1,MAXSPEED*motorSpeeds.m1);
+	SetMotor(2,MAXSPEED*motorSpeeds.m2);
+	SetMotor(3,MAXSPEED*motorSpeeds.m3);
+	SetMotor(4,MAXSPEED*motorSpeeds.m4);
 }
 
 void manualSchedule(void){

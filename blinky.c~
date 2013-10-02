@@ -282,8 +282,14 @@ void GPIO_Configuration(void)
 
 void UpdateMotor(void){
         //SetMotor(1,30);
+	if (motorSpeeds.m1){
 	SetMotor(1,MAXSPEED);
-	SetMotor(2,scaling*(unsigned int)motorSpeeds.m2);
+	}
+	else{
+	SetMotor(1,0);
+	}
+	SetMotor(2,MAXSPEED*motorSpeeds.m2);
+	//SetMotor(2,scaling*(unsigned int)motorSpeeds.m2);
 	SetMotor(3,scaling*(unsigned int)motorSpeeds.m3);
 	SetMotor(4,scaling*(unsigned int)motorSpeeds.m4);
 }
@@ -320,12 +326,12 @@ void manualSchedule(void){
 		UpdateMotor();
 	}
 	//5th, blink Green LED at 0.5Hz, (on for 1 second, off for 1 sec)
-	if(msTicks-cnt1000ms3 > 1000){
+	else if(msTicks-cnt1000ms3 > 1000){
 		cnt1000ms3 = msTicks;
 		switchGreenLed();
 	}
 	//6th, blink Red LED at 0.25Hz, (on for 2 second, off for 2 sec)
-	if(msTicks-cnt2000ms > 2000){
+	else if(msTicks-cnt2000ms > 2000){
 		cnt2000ms = msTicks;
 		switchRedLed();
 	}else{
