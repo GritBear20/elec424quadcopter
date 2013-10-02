@@ -3,7 +3,19 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
 #include "stm32f10x_tim.h"
+#include "lab2.h"
 volatile uint32_t msTicks;                       /* timeTicks counter */
+
+//define additional values
+MotorSpeeds motorSpeeds;
+uint32_t cnt10ms;
+uint32_t cnt100ms;
+uint32_t cnt1000ms1;
+uint32_t cnt1000ms2;
+uint32_t cnt1000ms3;
+uint32_t cnt2000ms;
+#define MAXSPEED 50
+const float scaling = (float)MAXSPEED/(float)0xff;
 
 //define the system init function
 //use HSE to drive PLL as system clock frequency
@@ -96,6 +108,13 @@ void initHSE(){
 	}
 }
 
+void switchGreenLed(void);
+void switchRedLed(void);
+
+//manual scheduler
+//it is called every 10ms
+void manualSchedule(void);
+
 //increment the counter
 void SysTick_Handler(void) {
   msTicks++;                                     /* increment timeTicks counter */
@@ -122,6 +141,7 @@ void RCC_Configuration(void);
 void GPIO_Configuration(void);
 void Config_Timer(void);
 void SetMotor(int motorNum, uint16_t motorVal);
+void UpdateMotor(void);
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -146,24 +166,31 @@ int main(void)
   /*Configure Timer*/
   Config_Timer();
 
- 
+ //minimize 
+		cnt10ms = msTicks;
+		cnt100ms = msTicks + 1;
+		cnt1000ms1 = msTicks + 2;
+		cnt1000ms2 = msTicks + 3;
+		cnt1000ms3 = msTicks + 4;
+		cnt2000ms = msTicks + 5;
  
 
   while (1)
-  {	SetMotor(4,0);
+  {	/*SetMotor(4,0);
 	SetMotor(1,Speed);
-	Delay(2000);
+	Delay(1000);
 	//GPIOB->BSRR=1<<5;
  	SetMotor(1,0);
 	SetMotor(2,Speed);
-	Delay(2000);
+	Delay(1000);
 	SetMotor(2,0);
 	SetMotor(3,Speed);
-	Delay(2000);
+	Delay(1000);
 	//GPIOB->BSRR=1<<21;
 	SetMotor(3,0);
 	SetMotor(4,Speed);
-	Delay(2000);
+	Delay(1000);*/
+	manualSchedule();
 	}
 }
 
@@ -248,11 +275,81 @@ void GPIO_Configuration(void)
   GPIO_Init(GPIOB, &GPIO_InitStructure);
   //GPIO_PinRemapConfig(GPIO_FullRemap_TIM3, ENABLE);
 
-  //RCC->APB2ENR|=0x08;
-  //GPIOB->CRL=0x00100000;
+  RCC->APB2ENR|=0x08;
+  GPIOB->CRL|=0x00100000;
 
 }
 
+void UpdateMotor(void){
+        //SetMotor(1,30);
+	SetMotor(1,MAXSPEED);
+	SetMotor(2,scaling*(unsigned int)motorSpeeds.m2);
+	SetMotor(3,scaling*(unsigned int)motorSpeeds.m3);
+	SetMotor(4,scaling*(unsigned int)motorSpeeds.m4);
+}
+
+void manualSchedule(void){
+	//check tasks
+	//1st, every 10second run the detectEmergency
+ 
+	if(msTicks - cnt10ms >= 10){
+		cnt10ms = msTicks;
+		//since it has the highest priority, it gets executed immediately
+		detectEmergency();
+	}
+	
+	//2nd, every 100second run the refreshSensorData
+	else if(msTicks-cnt100ms > 100){
+		cnt100ms = msTicks;
+		//this gets executed secondarily
+		refreshSensorData();
+	}
+
+	//3rd, calculateOrientation at once every second
+	else if(msTicks-cnt1000ms1  > 1000){
+		//need to further make sure that it doesn't collide with the other two tasks
+		if(cnt100ms - msTicks < 96 && cnt10ms - msTicks < 6){
+			cnt1000ms1 = msTicks;
+			calculateOrientation();
+		}
+	}
+	//4th, updatePid at onces every second
+	else if(msTicks-cnt1000ms2 > 1000){
+		cnt1000ms2 = msTicks;
+		updatePid(&motorSpeeds);
+		UpdateMotor();
+	}
+	//5th, blink Green LED at 0.5Hz, (on for 1 second, off for 1 sec)
+	if(msTicks-cnt1000ms3 > 1000){
+		cnt1000ms3 = msTicks;
+		switchGreenLed();
+	}
+	//6th, blink Red LED at 0.25Hz, (on for 2 second, off for 2 sec)
+	if(msTicks-cnt2000ms > 2000){
+		cnt2000ms = msTicks;
+		switchRedLed();
+	}else{
+		logDebugInfo();
+	}
+	
+}
+
+int flag=0;
+void switchGreenLed(void){
+    if (flag){
+        GPIOB->BSRR&=~1<<21;
+	GPIOB->BSRR|=1<<5;
+   }
+    else{
+        GPIOB->BSRR&=~1<<5;
+	GPIOB->BSRR|=1<<21;
+	}
+   flag=~flag;
+	
+}
+
+void switchRedLed(void){
+}
 #ifdef  USE_FULL_ASSERT
 
 /**
