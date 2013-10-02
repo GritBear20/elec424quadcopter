@@ -1,5 +1,3 @@
-
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
 #include "stm32f10x_tim.h"
@@ -151,12 +149,14 @@ void UpdateMotor(void);
   */
 int main(void)
 {
+   initHSE();
+
    if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
     ;                                            /* Handle Error */
     while (1);
   }
-  //SystemInit();
-   initHSE();
+  Delay(5000); //delay 5s for debugging purposes
+
   /* System Clocks Configuration */
   RCC_Configuration();
 
@@ -166,32 +166,19 @@ int main(void)
   /*Configure Timer*/
   Config_Timer();
 
- //minimize 
-		cnt10ms = msTicks;
-		cnt100ms = msTicks + 1;
-		cnt1000ms1 = msTicks + 2;
-		cnt1000ms2 = msTicks + 3;
-		cnt1000ms3 = msTicks + 4;
-		cnt2000ms = msTicks + 5;
+  //minimize collision possibility by adding an offset
+  cnt10ms = msTicks;
+  cnt100ms = msTicks + 1;
+  cnt1000ms1 = msTicks + 2;
+  cnt1000ms2 = msTicks + 3;
+  cnt1000ms3 = msTicks + 4;
+  cnt2000ms = msTicks + 5;
  
 
   while (1)
-  {	/*SetMotor(4,0);
-	SetMotor(1,Speed);
-	Delay(1000);
-	//GPIOB->BSRR=1<<5;
- 	SetMotor(1,0);
-	SetMotor(2,Speed);
-	Delay(1000);
-	SetMotor(2,0);
-	SetMotor(3,Speed);
-	Delay(1000);
-	//GPIOB->BSRR=1<<21;
-	SetMotor(3,0);
-	SetMotor(4,Speed);
-	Delay(1000);*/
-	manualSchedule();
-	}
+  {	
+    manualSchedule();
+  }
 }
 
 void SetMotor(int motorNum, uint16_t motorVal){
@@ -217,17 +204,16 @@ void SetMotor(int motorNum, uint16_t motorVal){
 	TIM_OC3Init(TIM4, &TIM_OCInitStructure);
   	TIM_OC3PreloadConfig(TIM4, TIM_OCPreload_Enable);
   }
-
 }
 
 void Config_Timer(void){
-	 /* -----------------------------------------------------------------------
+  /* -----------------------------------------------------------------------
     Timer Configuration: 
 
     Timer duty cycle = (TIM_CCR/ TIM_ARR)* 100
   ----------------------------------------------------------------------- */
   /* Compute the prescaler value */
-  PrescalerValue = (uint16_t) (SystemCoreClock / 24000000) - 1;
+  PrescalerValue = (uint16_t) (SystemCoreClock / 72000000) - 1;//72MHZ
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = 665;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
@@ -241,6 +227,10 @@ void Config_Timer(void){
    /* TIM3 enable counter */
   TIM_Cmd(TIM3, ENABLE);
   TIM_CtrlPWMOutputs(TIM3,ENABLE);
+  //AFIO->MAPR &= 0<<10;
+  // AFIO->MAPR|=1<<11; 
+
+
   /* TIM4 enable counter */
   TIM_Cmd(TIM4, ENABLE);
   TIM_CtrlPWMOutputs(TIM4,ENABLE);
@@ -269,19 +259,17 @@ nable */
 void GPIO_Configuration(void)
 {
   GPIO_InitTypeDef GPIO_InitStructure;
-  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1|GPIO_Pin_8|GPIO_Pin_9;
+  GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1|GPIO_Pin_4|GPIO_Pin_8|GPIO_Pin_9;
   GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
   GPIO_Init(GPIOB, &GPIO_InitStructure);
-  //GPIO_PinRemapConfig(GPIO_FullRemap_TIM3, ENABLE);
 
   RCC->APB2ENR|=0x08;
-  GPIOB->CRL|=0x00100000;
-
+  GPIOB->CRL|=0x00110000;//set GIPOB-5 and 4 to output
 }
 
+//set motor speed according to MAXSPEED and motorSpeeds struct
 void UpdateMotor(void){
-        //SetMotor(1,30);
 	SetMotor(1,MAXSPEED*motorSpeeds.m1);
 	SetMotor(2,MAXSPEED*motorSpeeds.m2);
 	SetMotor(3,MAXSPEED*motorSpeeds.m3);
@@ -348,7 +336,22 @@ void switchGreenLed(void){
 	
 }
 
+int flag2=0;
 void switchRedLed(void){
+ 
+    if (flag2){
+	//disable JTAG, PB4 becomes GPIO to turn red led on
+	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , ENABLE);
+        GPIOB->BSRR&=~1<<20;
+	GPIOB->BSRR|=1<<4;
+   }
+    else{
+	//enable JTAG (red led off)
+	GPIO_PinRemapConfig(GPIO_Remap_SWJ_JTAGDisable , DISABLE);
+        GPIOB->BSRR&=~1<<4;
+	GPIOB->BSRR|=1<<20;
+	}
+   flag2=~flag2;
 }
 #ifdef  USE_FULL_ASSERT
 
