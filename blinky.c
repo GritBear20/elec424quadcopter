@@ -134,13 +134,13 @@ uint16_t Speed = 30;
 
 uint16_t PrescalerValue = 0;
 
-/* Private function prototypes -----------------------------------------------*/
-void RCC_Configuration(void);
-void GPIO_Configuration(void);
-void Config_Timer(void);
-void SetMotor(int motorNum, uint16_t motorVal);
-void UpdateMotor(void);
-/* Private functions ---------------------------------------------------------*/
+/* Timer & Motor functions-----------------------------------------------*/
+void RCC_Configuration(void);//configure RCC
+void GPIO_Configuration(void); //configure the io pins
+void Config_Timer(void); // configure the timer
+void SetMotor(int motorNum, uint16_t motorVal) ; //drive moter x by speed motorVal
+void UpdateMotor(void); //update all the speeds for the 4 motors for part 3 
+/*   ---------------------------------------------------------*/
 
 /**
   * @brief  Main program
@@ -182,11 +182,17 @@ int main(void)
 }
 
 void SetMotor(int motorNum, uint16_t motorVal){
-  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;
-  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable;
-  TIM_OCInitStructure.TIM_Pulse = motorVal;
-  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;
-  if (motorNum==1){
+	/*
+	This function takes two inputs :
+	a. motorNum, the number of the motor 
+	b. motorVal, the speed (PWM duty cyle) of the motor 
+	based on the two inputs the function set up the PWM signals on TIMER3 and TIMER4
+	*/
+  TIM_OCInitStructure.TIM_OCMode = TIM_OCMode_PWM1;//use PWM mode
+  TIM_OCInitStructure.TIM_OutputState = TIM_OutputState_Enable; //enable output state
+  TIM_OCInitStructure.TIM_Pulse = motorVal;//set pulse - the duty cycle
+  TIM_OCInitStructure.TIM_OCPolarity = TIM_OCPolarity_High;//set polarity to high
+  if (motorNum==1){//initialize the PWM signal by choosing different Channels & pins
 	TIM_OC4Init(TIM3, &TIM_OCInitStructure);
 
  	TIM_OC4PreloadConfig(TIM3, TIM_OCPreload_Enable);
@@ -210,25 +216,23 @@ void Config_Timer(void){
   /* -----------------------------------------------------------------------
     Timer Configuration: 
 
-    Timer duty cycle = (TIM_CCR/ TIM_ARR)* 100
+    Timer duty cycle = (TIM_CCR/ Timer Period)* 100%
   ----------------------------------------------------------------------- */
   /* Compute the prescaler value */
-  PrescalerValue = (uint16_t) (SystemCoreClock / 36000000) - 1;//Timer 3 =  36MHZ
+  PrescalerValue = (uint16_t) (SystemCoreClock / 36000000) - 1;//set Timer 3 =  36MHZ
   /* Time base configuration */
   TIM_TimeBaseStructure.TIM_Period = 665;
   TIM_TimeBaseStructure.TIM_Prescaler = PrescalerValue;
   TIM_TimeBaseStructure.TIM_ClockDivision = 0;
-  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;
+  TIM_TimeBaseStructure.TIM_CounterMode = TIM_CounterMode_Up;//set counter mode = up
 
-  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);
+  TIM_TimeBaseInit(TIM3, &TIM_TimeBaseStructure);//use the same setting for timer 3 and timer 4
   TIM_TimeBaseInit(TIM4, &TIM_TimeBaseStructure);
   TIM_ARRPreloadConfig(TIM3, ENABLE);
   TIM_ARRPreloadConfig(TIM4, ENABLE);
    /* TIM3 enable counter */
   TIM_Cmd(TIM3, ENABLE);
   TIM_CtrlPWMOutputs(TIM3,ENABLE);
-  //AFIO->MAPR &= 0<<10;
-  // AFIO->MAPR|=1<<11; 
 
 
   /* TIM4 enable counter */
@@ -251,20 +255,17 @@ nable */
 
 }
 
-/**
-  * @brief  Configure the TIM3 Ouput Channels.
-  * @param  None
-  * @retval None
-  */
 void GPIO_Configuration(void)
 {
+	//configure GPIO
   GPIO_InitTypeDef GPIO_InitStructure;
+  //enable PB0,1,8,9 (the motors)and PB4 (the red led)
   GPIO_InitStructure.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1|GPIO_Pin_4|GPIO_Pin_8|GPIO_Pin_9;
-  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;
-  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-  GPIO_Init(GPIOB, &GPIO_InitStructure);
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AF_PP;//choose alternative function !(the timers )
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;//set speed
+  GPIO_Init(GPIOB, &GPIO_InitStructure);//initiazlied the pins to GPIOB
 
-  RCC->APB2ENR|=0x08;
+  RCC->APB2ENR|=0x08;//enable GPIOB
   GPIOB->CRL|=0x00110000;//set GIPOB-5 and 4 to output
 }
 
@@ -325,14 +326,16 @@ void manualSchedule(void){
 int flag=0;
 void switchGreenLed(void){
     if (flag){
+    	//green led on
         GPIOB->BSRR&=~1<<21;
 	GPIOB->BSRR|=1<<5;
    }
     else{
+    	//green led off
         GPIOB->BSRR&=~1<<5;
 	GPIOB->BSRR|=1<<21;
 	}
-   flag=~flag;
+   flag=~flag;//toggle the flag
 	
 }
 
@@ -351,34 +354,5 @@ void switchRedLed(void){
         GPIOB->BSRR&=~1<<4;
 	GPIOB->BSRR|=1<<20;
 	}
-   flag2=~flag2;
+   flag2=~flag2;//toggle the flag
 }
-#ifdef  USE_FULL_ASSERT
-
-/**
-  * @brief  Reports the name of the source file and the source line number
-  *         where the assert_param error has occurred.
-  * @param  file: pointer to the source file name
-  * @param  line: assert_param error line source number
-  * @retval None
-  */
-void assert_failed(uint8_t* file, uint32_t line)
-{
-  /* User can add his own implementation to report the file name and line number,
-     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
-
-  while (1)
-  {}
-}
-
-#endif
-
-/**
-  * @}
-  */ 
-
-/**
-  * @}
-  */ 
-
-/******************* (C) COPYRIGHT 2011 STMicroelectronics *****END OF FILE****/
