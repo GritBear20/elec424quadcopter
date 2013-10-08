@@ -1,4 +1,4 @@
-// Rice ELEC424 Lab2.h
+// Rice ELEC424 Lab3.h
 // Simulated Quadrotor tasks
 // Authors: Steven Arroyo and Lin Zhong
 
@@ -17,9 +17,10 @@ unsigned char detectEmergency(void);
 // this function needs to be executed once every 100 ms.  Priority 2.
 unsigned char refreshSensorData(void); 
 
-// this function needs to be executed once every second.    Priority 3. 
-// This function takes many cycles to complete!
-// Care should be taken not to block other higher priority functions
+// Priority 3. 
+// This function should be syncronized with refreshSensorData by a semaphore.
+// That is, after refreshSensorData completes your task should signal data is ready 
+// by a semaphore.  A seperate task would then unblock and call this function
 unsigned char calculateOrientation(void); 
 
 // this function needs to be executed once every second.    Priority 4.
@@ -30,4 +31,5 @@ unsigned char updatePid(MotorSpeeds* p_motorSpeedsPtr);
 
 // Run this low priority function when time is available.    Priority 5.
 unsigned char logDebugInfo(void);
+
 

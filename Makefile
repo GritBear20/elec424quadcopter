@@ -20,7 +20,7 @@ CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP)
 # build all relevant files and create .elf
 all:
 
-	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c stm32f10x_tim.h stm32f10x_tim.c system_stm32f10x.h blinky.c liblab2.a lab2.h $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c stm32f10x_tim.h stm32f10x_tim.c system_stm32f10x.h blinky.c liblab3.a lab3.h $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
 
 clean:
 	rm -rf *o blinky
