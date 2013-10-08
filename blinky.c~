@@ -1,7 +1,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f10x.h"
 #include "stm32f10x_tim.h"
-#include "lab2.h"
+#include "lab3.h"
 volatile uint32_t msTicks;                       /* timeTicks counter */
 
 //define additional values

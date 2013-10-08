@@ -1,0 +1,1 @@
+$(FreeRTOS_Core_Include)/croutine.h $(FreeRTOS_Core)/croutine.c $(FreeRTOS_Core_Include)/queue.h $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core_Include)/semphr.h $(FreeRTOS_Core_Include)/timers.h $(FreeRTOS_Core)/timers.c $(FreeRTOS_Core_Include)/task.h $(FreeRTOS_Core)/tasks.c $(FreeRTOS_ARM_CM3)/portmacro.h $(FreeRTOS_ARM_CM3)/port.c
