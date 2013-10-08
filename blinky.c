@@ -2,6 +2,9 @@
 #include "stm32f10x.h"
 #include "stm32f10x_tim.h"
 #include "lab3.h"
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
 volatile uint32_t msTicks;                       /* timeTicks counter */
 
 //define additional values
