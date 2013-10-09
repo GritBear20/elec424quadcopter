@@ -137,8 +137,7 @@ int main(void)
     xTaskCreate( prvLogDebugTask, ( signed char * ) "GreenLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_GREEN_LED, NULL );
     
     
-    vTaskStartScheduler();
-  /*Manual Scheduling
+  //Manual Scheduling
   //minimize collision possibility by adding an offset
   cnt10ms = msTicks;
   cnt100ms = msTicks + 1;
@@ -152,7 +151,9 @@ int main(void)
   {	
     manualSchedule();
   }
-   */
+
+    vTaskStartScheduler();
+
 }
 
 void SetMotor(int motorNum, uint16_t motorVal){
@@ -250,7 +251,7 @@ void UpdateMotor(void){
 	SetMotor(3,MAXSPEED*motorSpeeds.m3);
 	SetMotor(4,MAXSPEED*motorSpeeds.m4);
 }
-/*
+
 void manualSchedule(void){
 	//check tasks
 	//1st, every 10second run the detectEmergency
@@ -296,7 +297,7 @@ void manualSchedule(void){
 	}
 	
 }
-*/
+
 int flag=0;
 void switchGreenLed(void){
     if (flag){

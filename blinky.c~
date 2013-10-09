@@ -129,14 +129,16 @@ int main(void)
     //MiraFlag
     xTaskCreate( prvDetectEmergencyTask, ( signed char * ) "Detect", configMINIMAL_STACK_SIZE, NULL, mainDETECT_EMER_PRIORITY, NULL );
     xTaskCreate( prvRefreshSensorTask, ( signed char * ) "Refresh", configMINIMAL_STACK_SIZE, NULL, mainREFRESH_SENSOR_PRIORITY, NULL );
-    xTaskCreate( prvCalculateOrientationTask, ( signed char * ) "Calculate", configMINIMAL_STACK_SIZE, NULL, mainCALCULATE_PRIORITY, NULL );
+    //xTaskCreate( prvCalculateOrientationTask, ( signed char * ) "Calculate", configMINIMAL_STACK_SIZE, NULL, mainCALCULATE_PRIORITY, NULL );
     xTaskCreate( prvUpdatePidTask, ( signed char * ) "Update", configMINIMAL_STACK_SIZE, NULL, mainUPDATE_PID_PRIORITY, NULL );
     xTaskCreate( prvLogDebugTask, ( signed char * ) "LogDebug", configMINIMAL_STACK_SIZE, NULL, mainLOG_DEBUG_PRIORITY, NULL );
     
+    //xTaskCreate( prvLogDebugTask, ( signed char * ) "RedLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_RED_LED, NULL );
+    xTaskCreate( prvLogDebugTask, ( signed char * ) "GreenLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_GREEN_LED, NULL );
     
     
     vTaskStartScheduler();
-  /*Manual Scheduling
+  //Manual Scheduling
   //minimize collision possibility by adding an offset
   cnt10ms = msTicks;
   cnt100ms = msTicks + 1;
@@ -150,7 +152,6 @@ int main(void)
   {	
     manualSchedule();
   }
-   */
 }
 
 void SetMotor(int motorNum, uint16_t motorVal){
@@ -248,7 +249,7 @@ void UpdateMotor(void){
 	SetMotor(3,MAXSPEED*motorSpeeds.m3);
 	SetMotor(4,MAXSPEED*motorSpeeds.m4);
 }
-/*
+
 void manualSchedule(void){
 	//check tasks
 	//1st, every 10second run the detectEmergency
@@ -294,7 +295,7 @@ void manualSchedule(void){
 	}
 	
 }
-*/
+
 int flag=0;
 void switchGreenLed(void){
     if (flag){
