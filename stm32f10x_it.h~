@@ -40,8 +40,10 @@ void UsageFault_Handler(void);
 void xPortPendSVHandler( void ) __attribute__ (( naked, used ));
 void DebugMon_Handler(void);
 //void PendSV_Handler(void);
-void xPortSysTickHandler( void ) __attribute__ ((used));
 //void SysTick_Handler(void);
+
+
+void xPortSysTickHandler( void ) __attribute__ ((used));
 void vPortSVCHandler( void ) __attribute__ (( naked, used ));
 					 
 #endif /* __STM32F10x_IT_H */

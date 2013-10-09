@@ -18,6 +18,16 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 	//for( ;; );
 }
 
+/*-----------------------------------------------------------*/
+
+void assert_failed( unsigned char *pucFile, unsigned long ulLine )
+{
+	( void ) pucFile;
+	( void ) ulLine;
+
+	//for( ;; );
+}
+
 extern int  __HEAP_START;
 
 caddr_t _sbrk ( int incr )

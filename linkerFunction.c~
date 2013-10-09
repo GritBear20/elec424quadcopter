@@ -1,3 +1,10 @@
+#include "FreeRTOS.h"
+#include "task.h"
+#include "queue.h"
+#include "semphr.h"
+#include "stm32f10x.h"
+#include "stm32f10x_tim.h"
+#include <sys/types.h>
 
 void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
 {
@@ -8,7 +15,17 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 	( void ) pxTask;
 	( void ) pcTaskName;
     
-	for( ;; );
+	//for( ;; );
+}
+
+/*-----------------------------------------------------------*/
+
+void assert_failed( unsigned char *pucFile, unsigned long ulLine )
+{
+	( void ) pucFile;
+	( void ) ulLine;
+
+	//for( ;; );
 }
 
 extern int  __HEAP_START;

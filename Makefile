@@ -33,6 +33,9 @@ all:
 lab2:	
 	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky.c liblab2.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
 
+test:
+	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky_test.c liblab2.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+
 al:	list.o tasks.o queue.o timers.o heap.o port.o
 	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c stm32f10x_tim.h stm32f10x_tim.c system_stm32f10x.h blinky.c liblab3.a lab3.h list.o tasks.o queue.o timers.o heap.o port.o $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
 
@@ -53,10 +56,6 @@ heap.o: $(FreeRTOS_MemMang)/heap_4.c
 
 port.o: $(FreeRTOS_ARM_CM3)/port.c
 	$(CC) $(CFLAGS) $(FreeRTOS_ARM_CM3)/port.c -o port.o
-
-test:
-	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky_test.c liblab2.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
-
 
 clean:
 	rm -rf *o blinky
