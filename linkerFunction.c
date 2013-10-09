@@ -15,7 +15,7 @@ void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName 
 	( void ) pxTask;
 	( void ) pcTaskName;
     
-	for( ;; );
+	//for( ;; );
 }
 
 extern int  __HEAP_START;
