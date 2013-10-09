@@ -1,11 +1,11 @@
 /* Includes ------------------------------------------------------------------*/
-#include "FreeRTOS.h"
+/*#include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
-#include "semphr.h"
+#include "semphr.h"*/
 #include "stm32f10x.h"
 #include "stm32f10x_tim.h"
-#include "lab3.h"
+#include "lab2.h"
 volatile uint32_t msTicks;                       /* timeTicks counter */
 
 //define additional values
@@ -359,16 +359,4 @@ void switchRedLed(void){
 	GPIOB->BSRR|=1<<20;
 	}
    flag2=~flag2;//toggle the flag
-}
-
-void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
-{
-	/* This function will get called if a task overflows its stack.   If the
-     parameters are corrupt then inspect pxCurrentTCB to find which was the
-     offending task. */
-    
-	( void ) pxTask;
-	( void ) pcTaskName;
-    
-	for( ;; );
 }
