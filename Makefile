@@ -24,7 +24,7 @@ DEMO_COMMON_DIR=$(RTOS_ROOT)/Demo/Common/Minimal
 DEMO_INCLUDE_DIR=$(RTOS_ROOT)/Demo/Common/include
 
 # Define the compiler flags
-CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb -lnosys --specs=rdimon.specs -Wl,--start-group -lgcc -lc -lm -lrdimon -Wl,--end-group -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP) -I$(STM_CORE_SUPPORT) -I$(STM_DEVICE_SUPPORT) -I$(FreeRTOS_Core) -I$(FreeRTOS_Core_Include) -I$(FreeRTOS_ARM_CM3) -I$(DEMO_COMMON_DIR) -I$(DEMO_INCLUDE_DIR) -I$(INC) -DSTM32F10X_MD -include stm32f10x_conf.h -Wl,--gc-sections -T stm32_flash.ld
+CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb --specs=rdimon.specs -Wl,--gc-sections -T stm32_flash.ld -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP) -I$(STM_CORE_SUPPORT) -I$(STM_DEVICE_SUPPORT) -I$(FreeRTOS_Core) -I$(FreeRTOS_Core_Include) -I$(FreeRTOS_ARM_CM3) -I$(DEMO_COMMON_DIR) -I$(DEMO_INCLUDE_DIR) -I$(INC) -DSTM32F10X_MD -include stm32f10x_conf.h 
 
 # build all relevant files and create .elf
 all:	
