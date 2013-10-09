@@ -18,16 +18,41 @@ STM_STARTUP = $(STM_LIB)/CMSIS/CM3/DeviceSupport/ST/STM32F10x/startup/gcc_ride7
 FreeRTOS_Core = $(LIB)/FreeRTOS
 FreeRTOS_Core_Include = $(FreeRTOS_Core)/include
 FreeRTOS_ARM_CM3 = $(FreeRTOS_Core)/portable/GCC/ARM_CM3
+FreeRTOS_MemMang = $(FreeRTOS_Core)/portable/MemMang
+RTOS_ROOT = lib/FreeRTOSV7.5.2/FreeRTOS
+DEMO_COMMON_DIR=$(RTOS_ROOT)/Demo/Common/Minimal
+DEMO_INCLUDE_DIR=$(RTOS_ROOT)/Demo/Common/include
 
 # Define the compiler flags
-CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP) -I$(STM_CORE_SUPPORT) -I$(STM_DEVICE_SUPPORT) -I$(FreeRTOS_Core) -I$(FreeRTOS_Core_Include) -I$(FreeRTOS_ARM_CM3) -I$(INC) -DSTM32F10X_MD -include stm32f10x_conf.h -Wl,--gc-sections -T stm32_flash.ld
+CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP) -I$(STM_CORE_SUPPORT) -I$(STM_DEVICE_SUPPORT) -I$(FreeRTOS_Core) -I$(FreeRTOS_Core_Include) -I$(FreeRTOS_ARM_CM3) -I$(DEMO_COMMON_DIR) -I$(DEMO_INCLUDE_DIR) -I$(INC) -DSTM32F10X_MD -include stm32f10x_conf.h -Wl,--gc-sections -T stm32_flash.ld
 
 # build all relevant files and create .elf
-all:
-	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c stm32f10x_tim.h stm32f10x_tim.c system_stm32f10x.h blinky.c liblab3.a lab3.h $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core_Include)/queue.h $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core_Include)/semphr.h $(FreeRTOS_Core_Include)/task.h $(FreeRTOS_ARM_CM3)/port.c $(FreeRTOS_ARM_CM3)/portmacro.h $(FreeRTOS_Core_Include)/FreeRTOS.h $(INC)/FreeRTOSConfig.h $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+all:	
+	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c stm32f10x_tim.h stm32f10x_tim.c system_stm32f10x.h blinky.c liblab3.a lab3.h $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+
+al:	list.o tasks.o queue.o timers.o heap.o port.o
+	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s stm32f10x.h system_stm32f10x.c stm32f10x_tim.h stm32f10x_tim.c system_stm32f10x.h blinky.c liblab3.a lab3.h list.o tasks.o queue.o timers.o heap.o port.o $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+
+list.o: $(FreeRTOS_Core)/list.c
+	$(CC) $(CFLAGS) $(FreeRTOS_Core)/list.c -o list.o
+
+tasks.o: $(FreeRTOS_Core)/tasks.c
+	$(CC) $(CFLAGS) $(FreeRTOS_Core)/tasks.c -o tasks.o
+
+queue.o:$(FreeRTOS_Core)/queue.c
+	$(CC) $(CFLAGS) $(FreeRTOS_Core)/queue.c $(MEMMANG_OBJ) -o queue.o
+
+timers.o: $(FreeRTOS_Core)/timers.c
+	$(CC) $(CFLAGS) $(FreeRTOS_Core)/timers.c -o timers.o
+
+heap.o: $(FreeRTOS_MemMang)/heap_4.c
+	$(CC) $(CFLAGS) $(FreeRTOS_MemMang)/heap_4.c -o heap.o
+
+port.o: $(FreeRTOS_ARM_CM3)/port.c
+	$(CC) $(CFLAGS) $(FreeRTOS_ARM_CM3)/port.c -o port.o
 
 test:
-	$(CC) $(CFLAGS) $(FreeRTOS_Core_Include)/FreeRTOS.h $(INC)/FreeRTOSConfig.h $(FreeRTOS_ARM_CM3)/portmacro.h $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core_Include)/queue.h   -o queue.o
+	$(CC) $(CFLAGS) $(FreeRTOS_Core)/tasks.c -o task.o 
 
 clean:
 	rm -rf *o blinky
