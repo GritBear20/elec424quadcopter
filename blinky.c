@@ -2,6 +2,7 @@
 #include "FreeRTOS.h"
 #include "task.h"
 #include "queue.h"
+#include "semphr.h"
 #include "stm32f10x.h"
 #include "stm32f10x_tim.h"
 #include "lab3.h"
@@ -430,7 +431,7 @@ static void prvDetectEmergencyTask( void *pvParameters )
     for( ;; )
     {
         // C
-        vTaskDelayUntil( &xLastWakeTime, WAIT_TIME_DETECT );
+        vTaskDelayUntil( &xLastExecutionTime, WAIT_TIME_DETECT );
         
         // Request data from the sensors.
         
