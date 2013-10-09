@@ -129,10 +129,12 @@ int main(void)
     //MiraFlag
     xTaskCreate( prvDetectEmergencyTask, ( signed char * ) "Detect", configMINIMAL_STACK_SIZE, NULL, mainDETECT_EMER_PRIORITY, NULL );
     xTaskCreate( prvRefreshSensorTask, ( signed char * ) "Refresh", configMINIMAL_STACK_SIZE, NULL, mainREFRESH_SENSOR_PRIORITY, NULL );
-    xTaskCreate( prvCalculateOrientationTask, ( signed char * ) "Calculate", configMINIMAL_STACK_SIZE, NULL, mainCALCULATE_PRIORITY, NULL );
+    //xTaskCreate( prvCalculateOrientationTask, ( signed char * ) "Calculate", configMINIMAL_STACK_SIZE, NULL, mainCALCULATE_PRIORITY, NULL );
     xTaskCreate( prvUpdatePidTask, ( signed char * ) "Update", configMINIMAL_STACK_SIZE, NULL, mainUPDATE_PID_PRIORITY, NULL );
     xTaskCreate( prvLogDebugTask, ( signed char * ) "LogDebug", configMINIMAL_STACK_SIZE, NULL, mainLOG_DEBUG_PRIORITY, NULL );
     
+    //xTaskCreate( prvLogDebugTask, ( signed char * ) "RedLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_RED_LED, NULL );
+    xTaskCreate( prvLogDebugTask, ( signed char * ) "GreenLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_GREEN_LED, NULL );
     
     
     vTaskStartScheduler();
