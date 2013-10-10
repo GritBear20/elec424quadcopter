@@ -1,65 +1,54 @@
 /*
-    FreeRTOS V7.5.2 - Copyright (C) 2013 Real Time Engineers Ltd.
-
-    VISIT http://www.FreeRTOS.org TO ENSURE YOU ARE USING THE LATEST VERSION.
+    FreeRTOS V6.0.0 - Copyright (C) 2009 Real Time Engineers Ltd.
 
     ***************************************************************************
-     *                                                                       *
-     *    FreeRTOS provides completely free yet professionally developed,    *
-     *    robust, strictly quality controlled, supported, and cross          *
-     *    platform software that has become a de facto standard.             *
-     *                                                                       *
-     *    Help yourself get started quickly and support the FreeRTOS         *
-     *    project by purchasing a FreeRTOS tutorial book, reference          *
-     *    manual, or both from: http://www.FreeRTOS.org/Documentation        *
-     *                                                                       *
-     *    Thank you!                                                         *
-     *                                                                       *
+    *                                                                         *
+    * If you are:                                                             *
+    *                                                                         *
+    *    + New to FreeRTOS,                                                   *
+    *    + Wanting to learn FreeRTOS or multitasking in general quickly       *
+    *    + Looking for basic training,                                        *
+    *    + Wanting to improve your FreeRTOS skills and productivity           *
+    *                                                                         *
+    * then take a look at the FreeRTOS eBook                                  *
+    *                                                                         *
+    *        "Using the FreeRTOS Real Time Kernel - a Practical Guide"        *
+    *                  http://www.FreeRTOS.org/Documentation                  *
+    *                                                                         *
+    * A pdf reference manual is also available.  Both are usually delivered   *
+    * to your inbox within 20 minutes to two hours when purchased between 8am *
+    * and 8pm GMT (although please allow up to 24 hours in case of            *
+    * exceptional circumstances).  Thank you for your support!                *
+    *                                                                         *
     ***************************************************************************
 
     This file is part of the FreeRTOS distribution.
 
     FreeRTOS is free software; you can redistribute it and/or modify it under
     the terms of the GNU General Public License (version 2) as published by the
-    Free Software Foundation >>!AND MODIFIED BY!<< the FreeRTOS exception.
-
-    >>! NOTE: The modification to the GPL is included to allow you to distribute
-    >>! a combined work that includes FreeRTOS without being obliged to provide
-    >>! the source code for proprietary components outside of the FreeRTOS
-    >>! kernel.
-
-    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT ANY
-    WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
-    FOR A PARTICULAR PURPOSE.  Full license text is available from the following
-    link: http://www.freertos.org/a00114.html
-
-    1 tab == 4 spaces!
-
-    ***************************************************************************
-     *                                                                       *
-     *    Having a problem?  Start by reading the FAQ "My application does   *
-     *    not run, what could be wrong?"                                     *
-     *                                                                       *
-     *    http://www.FreeRTOS.org/FAQHelp.html                               *
-     *                                                                       *
-    ***************************************************************************
-
-    http://www.FreeRTOS.org - Documentation, books, training, latest versions,
-    license and Real Time Engineers Ltd. contact details.
-
-    http://www.FreeRTOS.org/plus - A selection of FreeRTOS ecosystem products,
-    including FreeRTOS+Trace - an indispensable productivity tool, a DOS
-    compatible FAT file system, and our tiny thread aware UDP/IP stack.
-
-    http://www.OpenRTOS.com - Real Time Engineers ltd license FreeRTOS to High
-    Integrity Systems to sell under the OpenRTOS brand.  Low cost OpenRTOS
-    licenses offer ticketed support, indemnification and middleware.
-
-    http://www.SafeRTOS.com - High Integrity Systems also provide a safety
-    engineered and independently SIL3 certified version for use in safety and
-    mission critical applications that require provable dependability.
+    Free Software Foundation AND MODIFIED BY the FreeRTOS exception.
+    ***NOTE*** The exception to the GPL is included to allow you to distribute
+    a combined work that includes FreeRTOS without being obliged to provide the
+    source code for proprietary components outside of the FreeRTOS kernel.
+    FreeRTOS is distributed in the hope that it will be useful, but WITHOUT
+    ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+    FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
+    more details. You should have received a copy of the GNU General Public
+    License and the FreeRTOS license exception along with FreeRTOS; if not it
+    can be viewed here: http://www.freertos.org/a00114.html and also obtained
+    by writing to Richard Barry, contact details for whom are available on the
+    FreeRTOS WEB site.
 
     1 tab == 4 spaces!
+
+    http://www.FreeRTOS.org - Documentation, latest information, license and
+    contact details.
+
+    http://www.SafeRTOS.com - A version that is certified for use in safety
+    critical systems.
+
+    http://www.OpenRTOS.com - Commercial support, development, porting,
+    licensing and training services.
 */
 
 #ifndef FREERTOS_CONFIG_H
@@ -76,69 +65,67 @@
  *
  * See http://www.freertos.org/a00110.html.
  *----------------------------------------------------------*/
-#define vPortSVCHandler SVC_Handler
-#define xPortPendSVHandler PendSV_Handler
-#define xPortSysTickHandler SysTick_Handler
-
-/*#define __NVIC_PRIO_BITS    4               !< standard definition for NVIC Priority Bits */
 
 #define configUSE_PREEMPTION		1
 #define configUSE_IDLE_HOOK			0
 #define configUSE_TICK_HOOK			0
 #define configCPU_CLOCK_HZ			( ( unsigned long ) 72000000 )
 #define configTICK_RATE_HZ			( ( portTickType ) 1000 )
-#define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 7 )
-#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 120 )
-#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 18 * 1024 ) )
-#define configMAX_TASK_NAME_LEN		( 16 )
-#define configUSE_TRACE_FACILITY	1
+#define configMINIMAL_STACK_SIZE	( ( unsigned short ) 100 )
+#define configTOTAL_HEAP_SIZE		( ( size_t ) ( 15000 ) )
+#define configMAX_TASK_NAME_LEN		( 10 )
+#define configUSE_TRACE_FACILITY	0
 #define configUSE_16_BIT_TICKS		0
-#define configIDLE_SHOULD_YIELD		1
-
-/* Co-routine definitions. */
+#define configIDLE_SHOULD_YIELD		0
 #define configUSE_CO_ROUTINES 		0
-#define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
+#define configCHECK_FOR_STACK_OVERFLOW      1
+#define configUSE_TIMERS          1
+#define configTIMER_TASK_PRIORITY 1
+#define configTIMER_QUEUE_LENGTH  20
+#define configTIMER_TASK_STACK_DEPTH configMINIMAL_STACK_SIZE
 
-#define configUSE_MUTEXES				1
-#define configUSE_COUNTING_SEMAPHORES 	1
-#define configUSE_ALTERNATIVE_API 		0
-#define configCHECK_FOR_STACK_OVERFLOW	2
-#define configUSE_RECURSIVE_MUTEXES		1
-#define configQUEUE_REGISTRY_SIZE		0
-#define configGENERATE_RUN_TIME_STATS	0
+#define configMAX_PRIORITIES		( ( unsigned portBASE_TYPE ) 5 )
+#define configMAX_CO_ROUTINE_PRIORITIES ( 2 )
 
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 
-#define INCLUDE_vTaskPrioritySet		1
-#define INCLUDE_uxTaskPriorityGet		1
-#define INCLUDE_vTaskDelete				1
+#define INCLUDE_vTaskPrioritySet		0
+#define INCLUDE_uxTaskPriorityGet		0
+#define INCLUDE_vTaskDelete				0
 #define INCLUDE_vTaskCleanUpResources	0
-#define INCLUDE_vTaskSuspend			1
+#define INCLUDE_vTaskSuspend			0
 #define INCLUDE_vTaskDelayUntil			1
 #define INCLUDE_vTaskDelay				1
 
-/* This is the raw value as per the Cortex-M3 NVIC.  Values can be 255
-(lowest) to 0 (1?) (highest). */
-#define configKERNEL_INTERRUPT_PRIORITY 		7
-/* !!!! configMAX_SYSCALL_INTERRUPT_PRIORITY must not be set to zero !!!!
-See http://www.FreeRTOS.org/RTOS-Cortex-M3-M4.html. */
-#define configMAX_SYSCALL_INTERRUPT_PRIORITY 	3 /* equivalent to 0xb0, or priority 11. */
+#define configUSE_MUTEXES 1
 
+#define configKERNEL_INTERRUPT_PRIORITY     255
+#define configMAX_SYSCALL_INTERRUPT_PRIORITY 143 /* equivalent to 0x08, or priority 8. */
 
-/* This is the value being used as per the ST library which permits 16
-priority values, 0 to 15.  This must correspond to the
-configKERNEL_INTERRUPT_PRIORITY setting.  Here 15 corresponds to the lowest
-NVIC value of 255. */
-#define configLIBRARY_KERNEL_INTERRUPT_PRIORITY	7
+//Map the port handler to the crt0 interruptions handlers
+#define xPortPendSVHandler PendSV_Handler
+#define xPortSysTickHandler SysTick_Handler
+#define vPortSVCHandler SVC_Handler
 
-/*-----------------------------------------------------------
- * UART configuration.
- *-----------------------------------------------------------*/
-#define configCOM0_RX_BUFFER_LENGTH		128
-#define configCOM0_TX_BUFFER_LENGTH		128
-#define configCOM1_RX_BUFFER_LENGTH		128
-#define configCOM1_TX_BUFFER_LENGTH		128
+//Milliseconds to OS Ticks
+#define M2T(X) ((unsigned int)(X*(configTICK_RATE_HZ/1000.0)))
+#define F2T(X) ((unsigned int)((configTICK_RATE_HZ/X)))
 
+// DEBUG SECTION
+#define configUSE_APPLICATION_TASK_TAG  1
+#define configQUEUE_REGISTRY_SIZE       10
+
+#define TASK_LED_ID_NBR         1
+#define TASK_RADIO_ID_NBR       2
+#define TASK_STABILIZER_ID_NBR  3
+#define TASK_ADC_ID_NBR         4
+#define TASK_PM_ID_NBR          5
+/*
+#define traceTASK_SWITCHED_IN() \
+  { \
+    extern void debugSendTraceInfo(unsigned int taskNbr); \
+    debugSendTraceInfo((int)pxCurrentTCB->pxTaskTag); \
+  }
+*/
 #endif /* FREERTOS_CONFIG_H */
-

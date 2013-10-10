@@ -90,11 +90,7 @@ static void prvUSARTEchoTask( void *pvParameters );
 int main(void)
 {
 	
-  while (1)
-  {	
-	switchGreenLed();
-    	Delay();
-  }
+
   initHSE();
     //minimize collision possibility by adding an offset
 
@@ -114,7 +110,11 @@ int main(void)
   /*Configure Timer*/
   Config_Timer();
 
-
+  while (1)
+  {	
+	switchGreenLed();
+    	Delay();
+  }
 }
 
 static void prvCheckTask( void *pvParameters ){
@@ -126,7 +126,7 @@ unsigned long ulTicksToWait = mainCHECK_DELAY_NO_ERROR;
 
 	/* Initialise the variable used to control our iteration rate prior to
 	its first use. */
-	//xLastExecutionTime = xTaskGetTickCount();
+	xLastExecutionTime = xTaskGetTickCount();
 
 	for( ;; )
 	{
