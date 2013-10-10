@@ -6,6 +6,12 @@
 #include "stm32f10x_tim.h"
 #include <sys/types.h>
 
+/* Define configASSERT() to call vAssertCalled() if the assertion fails.  The assertion
+has failed if the value of the parameter passed into configASSERT() equals zero. */
+    
+void configASSERT(void){}
+
+
 void vApplicationStackOverflowHook( xTaskHandle pxTask, signed char *pcTaskName )
 {
 	/* This function will get called if a task overflows its stack.   If the

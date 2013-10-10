@@ -7,7 +7,8 @@
 #include "stm32f10x_tim.h"
 #include "lab2.h"
 volatile uint32_t msTicks;                       /* timeTicks counter */
-
+volatile int cnt;
+volatile int cnt2;
 //define additional values
 MotorSpeeds motorSpeeds;
 uint32_t cnt10ms;
@@ -49,16 +50,15 @@ void switchRedLed(void);
 void manualSchedule(void);
 
 //increment the counter
-void SysTick_Handler(void) {
-  msTicks++;                                     /* increment timeTicks counter */
-}
+//void SysTick_Handler(void) {
+//	 msTicks++;                                     /* increment timeTicks counter */
+//}
 
 //Define the delay function :
-__INLINE static void Delay (uint32_t dlyTicks) {
-  uint32_t curTicks = msTicks;
-  //stop when the counter counts is bigger than the set up value for delay
-  //otherwise keep looping int the delay
-  while ((msTicks - curTicks) < dlyTicks);
+__INLINE static void Delay () {
+	for(cnt = 0; cnt < 999999; cnt++){
+		for(cnt2 = 0; cnt2 < 999999; cnt2++){}
+	}
 }
 
 
@@ -89,13 +89,22 @@ static void prvUSARTEchoTask( void *pvParameters );
   */
 int main(void)
 {
-   initHSE();
-
-   if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
-    ;                                            /* Handle Error */
-    while (1);
+	
+  while (1)
+  {	
+	switchGreenLed();
+    	Delay();
+	
   }
-  Delay(2000); //delay 5s for debugging purposes
+  initHSE();
+    //minimize collision possibility by adding an offset
+
+  NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
+   //if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
+   //;                                            /* Handle Error */
+   // while (1);
+  //}
+  //Delay(2000); //delay 5s for debugging purposes
 
   /* System Clocks Configuration */
   RCC_Configuration();
@@ -106,19 +115,7 @@ int main(void)
   /*Configure Timer*/
   Config_Timer();
 
-  //minimize collision possibility by adding an offset
-  cnt10ms = msTicks;
-  cnt100ms = msTicks + 1;
-  cnt1000ms1 = msTicks + 2;
-  cnt1000ms2 = msTicks + 3;
-  cnt1000ms3 = msTicks + 4;
-  cnt2000ms = msTicks + 5;
- 
 
-  while (1)
-  {	
-    manualSchedule();
-  }
 }
 
 static void prvCheckTask( void *pvParameters ){

@@ -113,28 +113,28 @@ void DebugMon_Handler(void)
   * @param  None
   * @retval None
   */
-//void SVC_Handler(void)
-//{}
+void SVC_Handler(void)
+{}
 
-void xPortPendSVHandler( void ) __attribute__ (( naked, used )){};
+//void xPortPendSVHandler( void ) __attribute__ (( naked, used )){};
 
 /**
   * @brief  This function handles PendSV_Handler exception.
   * @param  None
   * @retval None
   */
-//void PendSV_Handler(void)
-//{}
-void xPortSysTickHandler( void ) __attribute__ ((used)){}
+void PendSV_Handler(void)
+{}
+//void xPortSysTickHandler( void ) __attribute__ ((used)){}
 
 /**
   * @brief  This function handles SysTick Handler.
   * @param  None
   * @retval None
   */
-//void SysTick_Handler(void)
-//{}
-void vPortSVCHandler( void ) __attribute__ (( naked, used )){}
+void SysTick_Handler(void)
+{}
+//void vPortSVCHandler( void ) __attribute__ (( naked, used )){}
 
 /******************************************************************************/
 /*                 STM32F10x Peripherals Interrupt Handlers                   */

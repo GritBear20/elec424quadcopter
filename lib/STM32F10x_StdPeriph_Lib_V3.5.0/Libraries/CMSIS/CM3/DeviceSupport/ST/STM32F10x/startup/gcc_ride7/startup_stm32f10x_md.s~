@@ -217,6 +217,15 @@ g_pfnVectors:
 	.weak	UsageFault_Handler
 	.thumb_set UsageFault_Handler,Default_Handler
 
+	.weak	vPortSVCHandler
+	.thumb_set vPortSVCHandler,Default_Handler
+
+	.weak	xPortPendSVHandler
+	.thumb_set xPortPendSVHandler,Default_Handler
+
+	.weak	xPortSysTickHandler
+	.thumb_set xPortSysTickHandler,Default_Handler
+
 	.weak	SVC_Handler
 	.thumb_set SVC_Handler,Default_Handler
 

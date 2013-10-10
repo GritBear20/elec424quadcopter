@@ -170,6 +170,18 @@ int main(void)
   /*Configure Timer*/
   Config_Timer();
 
+
+ //green led on
+  	GPIOB->BSRR&=~1<<21;
+  	GPIOB->BSRR|=1<<5;
+GPIOB->BSRR&=~1<<21;
+  	GPIOB->BSRR|=1<<5;
+  while (1)
+  {	
+     
+  }
+
+
   //minimize collision possibility by adding an offset
   cnt10ms = msTicks;
   cnt100ms = msTicks + 1;
