@@ -36,11 +36,8 @@ static void prvUpdatePidTask( void *pvParameters );
 static void prvLogDebugTask( void *pvParameters );
 static void prvRedLedTask( void *pvParameters);
 static void prvGreenLedTask(void *pvParameters);
-//define the system init function
-//use HSE to drive PLL as system clock frequency
-//frequency is 72MHz
-void initHSE();
 
+void initHSE();
 void switchGreenLed(void);
 void switchRedLed(void);
 
@@ -78,13 +75,7 @@ int main(void)
   /* Set the Vector Table base address at 0x08000000 */
   NVIC_SetVectorTable( NVIC_VectTab_FLASH, 0x0 );
 
-   //if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
-   //;                                            /* Handle Error */
-   // while (1);
-  //}
-  //Delay(2000); //delay 5s for debugging purposes
-
-  /* System Clocks Configuration */
+    /* System Clocks Configuration */
   RCC_Configuration();
 
   /* GPIO Configuration */
@@ -93,7 +84,7 @@ int main(void)
   /*Configure Timer*/
   Config_Timer();
 
-    //MiraFlag
+  //create tasks
 
     xTaskCreate( prvDetectEmergencyTask, ( signed char * ) "Detect", configMINIMAL_STACK_SIZE, NULL, mainDETECT_EMER_PRIORITY, NULL );
     xTaskCreate( prvRefreshSensorTask, ( signed char * ) "Refresh", configMINIMAL_STACK_SIZE, NULL, mainREFRESH_SENSOR_PRIORITY, NULL );
@@ -102,14 +93,9 @@ int main(void)
     xTaskCreate( prvLogDebugTask, ( signed char * ) "LogDebug", configMINIMAL_STACK_SIZE, NULL, mainLOG_DEBUG_PRIORITY, NULL );
     xTaskCreate( prvRedLedTask, ( signed char * ) "RedLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_RED_LED, NULL );
     xTaskCreate( prvGreenLedTask, ( signed char * ) "GreenLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_GREEN_LED, NULL );
-
+ // start task scheduler 
  vTaskStartScheduler();
 
-  /*while (1)
-  {	
-	switchGreenLed();
-    	Delay();
-  }*/
 }
 
 
@@ -337,9 +323,9 @@ void switchRedLed(void){
 }
 
 
-/*------------------MiraTask----------------------------------*/
+/*------------------Task Setup----------------------------------*/
 
-/* Described at the top of this file. */
+//Detect Emergency run every 10 ms
 static void prvDetectEmergencyTask( void *pvParameters )
 {
     portTickType xLastExecutionTime;
@@ -348,44 +334,46 @@ static void prvDetectEmergencyTask( void *pvParameters )
     xLastExecutionTime = xTaskGetTickCount();
     for( ;; )
     {
-        // C
+
         vTaskDelayUntil( &xLastExecutionTime, WAIT_TIME_DETECT );
         
-        // Request data from the sensors.
-        
+        // run detectEmergency()
         detectEmergency();
         
         
     }
 }
 
+//define the semaphore
 xSemaphoreHandle xSemaphore = NULL;
 
+//Frefresh Sensor every 100 ms
 static void prvRefreshSensorTask( void *pvParameters )
 {
     portTickType xLastExecutionTime;
    
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
-    // Start by obtaining the semaphore.
+
     xLastExecutionTime = xTaskGetTickCount();
     for( ;; )
     {
-        // C
+        
         vTaskDelayUntil( &xLastExecutionTime, WAIT_TIME_REFRESH );
         
         // Request data from the sensors.
-        if( xSemaphore != NULL )
-        {
+        if( xSemaphore != NULL )//if xSemaphore is not null
+        {   // check semaphore every 10 ticks, take it if it is available
             if( xSemaphoreTake( xSemaphore, ( portTickType ) 10 ) == pdTRUE )
             {
                 refreshSensorData();
-                xSemaphoreGive(xSemaphore);
+                xSemaphoreGive(xSemaphore); //release it 
             }
         }
         else{
+            //if semaphore is null, create a new one.
             refreshSensorData();
-	    vSemaphoreCreateBinary( xSemaphore );
+            vSemaphoreCreateBinary( xSemaphore );
         }
 
         
@@ -393,14 +381,13 @@ static void prvRefreshSensorTask( void *pvParameters )
     }
 
 }
-
+//caclulate orientation
 static void prvCalculateOrientationTask( void *pvParameters )
 {
     portTickType xLastExecutionTime;
    
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
-    // Start by obtaining the semaphore.
     xLastExecutionTime = xTaskGetTickCount();
    for(;;){ 
 if( xSemaphore != NULL )
@@ -409,24 +396,23 @@ if( xSemaphore != NULL )
         // wait 10 ticks to see if it becomes free.
         if( xSemaphoreTake( xSemaphore, ( portTickType ) 10 ) == pdTRUE )
         {
-            xSemaphore=NULL;
-	    calculateOrientation();
+            xSemaphore=NULL;//destroy the semaphore so the higher priority task will not be blocked. 
+            calculateOrientation();
         }
     }else{
-	 vTaskDelayUntil( &xLastExecutionTime, 200);
+	 vTaskDelayUntil( &xLastExecutionTime, 200);//if semaphore null (not created) we will wait for 200 ms 
 	}
     }
     
 }
 
-
+//updatePid once every second 
 static void prvUpdatePidTask( void *pvParameters )
 {
     portTickType xLastExecutionTime;
     
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
-    // Start by obtaining the semaphore.
     
     for( ;; )
     {
@@ -437,14 +423,13 @@ static void prvUpdatePidTask( void *pvParameters )
         
     }
 }
-
+//when available , debug task
 static void prvLogDebugTask( void *pvParameters )
 {
     portTickType xLastExecutionTime;
     
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
-    // Start by obtaining the semaphore.
     
     for( ;; )
     {
@@ -457,14 +442,13 @@ static void prvLogDebugTask( void *pvParameters )
 
 
 
-
+//toggle red led every 2 seconds
 static void prvRedLedTask( void *pvParameters )
 {
     portTickType xLastExecutionTime;
     
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
-    // Start by obtaining the semaphore.
     
     for( ;; )
     {
@@ -474,13 +458,12 @@ static void prvRedLedTask( void *pvParameters )
         
     }
 }
-
+//toggle green led every 1 second 
 static void prvGreenLedTask(void *pvParameters){
     portTickType xLastExecutionTime;
     
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
-    // Start by obtaining the semaphore.
     
     for( ;; )
     {
