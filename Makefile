@@ -28,13 +28,10 @@ CFLAGS = -O0 -g3 -mcpu=cortex-m3 -mthumb -I$(STM_STD_PERIF)/inc -I$(STM_STARTUP)
 
 # build all relevant files and create .elf
 all:	
-	$(CC) $(CFLAGS) $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(FreeRTOS_Core_Include)/FreeRTOS.h $(STM_STARTUP)/startup_stm32f10x_md.s $(STM_STD_PERIF)/src/misc.c system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky_lab3.c liblab3.a  $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
-
-lab2:	
-	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky.c liblab2.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s $(STM_STD_PERIF)/src/misc.c system_stm32f10x.c stm32f10x_tim.c linkerFunction.c main.c liblab3.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
 
 test:
-	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s $(STM_STD_PERIF)/src/misc.c system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky_test.c liblab2.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
+	$(CC) $(CFLAGS)  $(STM_STARTUP)/startup_stm32f10x_md.s $(STM_STD_PERIF)/src/misc.c system_stm32f10x.c stm32f10x_tim.c linkerFunction.c blinky_test.c liblab3.a $(FreeRTOS_Core)/list.c $(FreeRTOS_Core)/tasks.c $(FreeRTOS_Core)/queue.c $(FreeRTOS_Core)/timers.c $(FreeRTOS_MemMang)/heap_4.c $(FreeRTOS_ARM_CM3)/port.c $(STM_STD_PERIF)/src/stm32f10x_gpio.c $(STM_STD_PERIF)/src/stm32f10x_rcc.c -o blinky.elf
 
 list.o: $(FreeRTOS_Core)/list.c
 	$(CC) $(CFLAGS) $(FreeRTOS_Core)/list.c -o list.o

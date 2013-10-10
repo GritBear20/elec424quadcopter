@@ -7,41 +7,26 @@
 #include "stm32f10x_tim.h"
 #include "lab3.h"
 
-volatile uint32_t msTicks;                       /* timeTicks counter */
-
 //define additional values
 MotorSpeeds motorSpeeds;
-uint32_t cnt10ms;
-uint32_t cnt100ms;
-uint32_t cnt1000ms1;
-uint32_t cnt1000ms2;
-uint32_t cnt1000ms3;
-uint32_t cnt2000ms;
 #define MAXSPEED 50
 const float scaling = (float)MAXSPEED/(float)0xff;
 //Lab 03:
-
-/* Task priorities. */
-#define mainSEM_TEST_PRIORITY				( tskIDLE_PRIORITY + 1 )
-#define mainBLOCK_Q_PRIORITY				( tskIDLE_PRIORITY + 2 )
-#define mainINTEGER_TASK_PRIORITY           ( tskIDLE_PRIORITY )
-#define mainGEN_QUEUE_TASK_PRIORITY			( tskIDLE_PRIORITY )
-
 //user task priorities
-#define mainDETECT_EMER_PRIORITY            ( tskIDLE_PRIORITY + 6 )
-#define mainREFRESH_SENSOR_PRIORITY            ( tskIDLE_PRIORITY + 5 )
-#define mainCALCULATE_PRIORITY            ( tskIDLE_PRIORITY + 4 )
-#define mainUPDATE_PID_PRIORITY            ( tskIDLE_PRIORITY + 3 )
-#define mainLOG_DEBUG_PRIORITY            ( tskIDLE_PRIORITY + 1 )
-#define mainFLASH_GREEN_LED             ( tskIDLE_PRIORITY + 2 )
-#define mainFLASH_RED_LED             ( tskIDLE_PRIORITY + 2 )
+#define mainDETECT_EMER_PRIORITY            ( 0 )
+#define mainREFRESH_SENSOR_PRIORITY            ( 1 )
+#define mainCALCULATE_PRIORITY            ( 2 )
+#define mainUPDATE_PID_PRIORITY            ( 3 )
+#define mainLOG_DEBUG_PRIORITY            ( 7 )
+#define mainFLASH_GREEN_LED             ( 4 )
+#define mainFLASH_RED_LED             ( 4 )
 
 //user task wait time
 #define WAIT_TIME_DETECT 10
 #define WAIT_TIME_REFRESH 100
 #define WAIT_TIME_MOTOR 1000
-#define WAIT_TIME_RED_LED 500
-#define WAIT_TIME_GREEN_LED 2000
+#define WAIT_TIME_RED_LED 2000
+#define WAIT_TIME_GREEN_LED 1000
 
 /* Task method defined */
 static void prvDetectEmergencyTask( void *pvParameters );
@@ -51,31 +36,13 @@ static void prvUpdatePidTask( void *pvParameters );
 static void prvLogDebugTask( void *pvParameters );
 static void prvRedLedTask( void *pvParameters);
 static void prvGreenLedTask(void *pvParameters);
-
 //define the system init function
 //use HSE to drive PLL as system clock frequency
 //frequency is 72MHz
+void initHSE();
 
 void switchGreenLed(void);
 void switchRedLed(void);
-
-//manual scheduler
-//it is called every 10ms
-void manualSchedule(void);
-
-//increment the counter
-void SysTick_Handler(void) {
-  msTicks++;                                     /* increment timeTicks counter */
-}
-
-//Define the delay function :
-__INLINE static void Delay (uint32_t dlyTicks) {
-  uint32_t curTicks = msTicks;
-  //stop when the counter counts is bigger than the set up value for delay
-  //otherwise keep looping int the delay
-  while ((msTicks - curTicks) < dlyTicks);
-}
-
 
 TIM_TimeBaseInitTypeDef  TIM_TimeBaseStructure;
 TIM_OCInitTypeDef  TIM_OCInitStructure;
@@ -85,7 +52,6 @@ uint16_t Speed = 30;
 uint16_t PrescalerValue = 0;
 
 /* Timer & Motor functions-----------------------------------------------*/
-void initHSE(void);
 void RCC_Configuration(void);//configure RCC
 void GPIO_Configuration(void); //configure the io pins
 void Config_Timer(void); // configure the timer
@@ -93,20 +59,30 @@ void SetMotor(int motorNum, uint16_t motorVal) ; //drive moter x by speed motorV
 void UpdateMotor(void); //update all the speeds for the 4 motors for part 3 
 /*   ---------------------------------------------------------*/
 
-/**
-  * @brief  Main program
-  * @param  None
-  * @retval None
-  */
+
+/* A simple task that echoes all the characters that are received on COM0 
+(USART1). */
+
 int main(void)
 {
-   initHSE();
+	
 
-   if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
+  initHSE();
+    //minimize collision possibility by adding an offset
+
+  if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
     ;                                            /* Handle Error */
     while (1);
   }
-  Delay(5000); //delay 5s for debugging purposes
+  NVIC_PriorityGroupConfig( NVIC_PriorityGroup_4 );
+  /* Set the Vector Table base address at 0x08000000 */
+  NVIC_SetVectorTable( NVIC_VectTab_FLASH, 0x0 );
+
+   //if (SysTick_Config (SystemCoreClock / 1000)) { /* Setup SysTick for 1 msec interrupts */
+   //;                                            /* Handle Error */
+   // while (1);
+  //}
+  //Delay(2000); //delay 5s for debugging purposes
 
   /* System Clocks Configuration */
   RCC_Configuration();
@@ -116,45 +92,119 @@ int main(void)
 
   /*Configure Timer*/
   Config_Timer();
-    
-  /*FreeRTOP*/
-    /*from demo
-    vStartBlockingQueueTasks( mainBLOCK_Q_PRIORITY );
-    vStartSemaphoreTasks( mainSEM_TEST_PRIORITY );
-    vStartIntegerMathTasks( mainINTEGER_TASK_PRIORITY );
-    vStartGenericQueueTasks( mainGEN_QUEUE_TASK_PRIORITY );
-    vStartLEDFlashTasks( mainFLASH_TASK_PRIORITY );
-    vStartQueuePeekTasks();
-    vStartRecursiveMutexTasks();*/
+
     //MiraFlag
+
     xTaskCreate( prvDetectEmergencyTask, ( signed char * ) "Detect", configMINIMAL_STACK_SIZE, NULL, mainDETECT_EMER_PRIORITY, NULL );
     xTaskCreate( prvRefreshSensorTask, ( signed char * ) "Refresh", configMINIMAL_STACK_SIZE, NULL, mainREFRESH_SENSOR_PRIORITY, NULL );
-    //xTaskCreate( prvCalculateOrientationTask, ( signed char * ) "Calculate", configMINIMAL_STACK_SIZE, NULL, mainCALCULATE_PRIORITY, NULL );
+    xTaskCreate( prvCalculateOrientationTask, ( signed char * ) "Calculate", configMINIMAL_STACK_SIZE, NULL, mainCALCULATE_PRIORITY, NULL );
     xTaskCreate( prvUpdatePidTask, ( signed char * ) "Update", configMINIMAL_STACK_SIZE, NULL, mainUPDATE_PID_PRIORITY, NULL );
     xTaskCreate( prvLogDebugTask, ( signed char * ) "LogDebug", configMINIMAL_STACK_SIZE, NULL, mainLOG_DEBUG_PRIORITY, NULL );
-    
-    //xTaskCreate( prvLogDebugTask, ( signed char * ) "RedLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_RED_LED, NULL );
-    xTaskCreate( prvLogDebugTask, ( signed char * ) "GreenLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_GREEN_LED, NULL );
-    
-    
-  //Manual Scheduling
-  //minimize collision possibility by adding an offset
-  cnt10ms = msTicks;
-  cnt100ms = msTicks + 1;
-  cnt1000ms1 = msTicks + 2;
-  cnt1000ms2 = msTicks + 3;
-  cnt1000ms3 = msTicks + 4;
-  cnt2000ms = msTicks + 5;
- 
+    xTaskCreate( prvRedLedTask, ( signed char * ) "RedLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_RED_LED, NULL );
+    xTaskCreate( prvGreenLedTask, ( signed char * ) "GreenLed", configMINIMAL_STACK_SIZE, NULL, mainFLASH_GREEN_LED, NULL );
 
-  while (1)
+ vTaskStartScheduler();
+
+  /*while (1)
   {	
-    manualSchedule();
-  }
-
-    vTaskStartScheduler();
-
+	switchGreenLed();
+    	Delay();
+  }*/
 }
+
+
+
+//define the system init function
+//use HSE to drive PLL as system clock frequency
+//frequency is 72MHz
+void initHSE(){
+	//pre-defined variables
+	uint32_t HSEStatusCheck;
+	int StartUpCounter = 0;
+
+	//-----------------------------------------------------------------
+	/* Reset the RCC clock configuration to the default reset state(for debug purpose) */
+	/* Set HSION bit */
+	RCC->CR |= (uint32_t)0x00000001;
+ 
+	/* Reset SW, HPRE, PPRE1, PPRE2, ADCPRE and MCO bits */
+	RCC->CFGR &= (uint32_t)0xF8FF0000;
+ 
+	/* Reset HSEON, CSSON and PLLON bits */
+	RCC->CR &= (uint32_t)0xFEF6FFFF;
+ 
+	/* Reset HSEBYP bit */
+	RCC->CR &= (uint32_t)0xFFFBFFFF;
+	 
+	/* Reset PLLSRC, PLLXTPRE, PLLMUL and USBPRE/OTGFSPRE bits */
+	RCC->CFGR &= (uint32_t)0xFF80FFFF;
+	 
+	/* Disable all interrupts and clear pending bits  */
+	RCC->CIR = 0x009F0000;	
+	
+	//-----------------------------------------------------------------------------------------------
+	//enable HSE:
+	//wait until the HSEON is ready
+	RCC->CR |= ((uint32_t)RCC_CR_HSEON);
+	do {
+		 HSEStatusCheck = RCC->CR & RCC_CR_HSERDY;
+		 StartUpCounter++;
+	 } while((HSEStatusCheck == 0) && (StartUpCounter != 0x1000));
+	
+	if ((RCC->CR & RCC_CR_HSERDY) != RESET) {
+ 		HSEStatusCheck = (uint32_t)0x01;
+ 	} else {
+ 		HSEStatusCheck = (uint32_t)0x00;
+ 	}
+
+	//----------------------------------------------------------------------------------------------
+	//enable PLL and set it as the system clock source
+	if (HSEStatusCheck == (uint32_t)0x01) {
+		/* Enable Prefetch Buffer */
+	 	FLASH->ACR |= FLASH_ACR_PRFTBE;
+	 
+	 	/* Flash 2 wait state */
+	 	FLASH->ACR &= (uint32_t)((uint32_t)~FLASH_ACR_LATENCY);
+	 	FLASH->ACR |= (uint32_t)FLASH_ACR_LATENCY_2;
+	 
+	 	/* HCLK = SYSCLK */
+	 	RCC->CFGR |= (uint32_t)RCC_CFGR_HPRE_DIV1;
+	 
+	 	/* PCLK2 = HCLK */
+	 	RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE2_DIV1;
+	 
+	 	/* PCLK1 = HCLK / 2 */
+	 	RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE1_DIV2;
+	 
+	 	/*  PLL configuration: PLLCLK = HSE/2 * 9 = 72 MHz */
+	 	/* Set Bits to 0 */
+		 RCC->CFGR &= (uint32_t)((uint32_t)~(
+		  RCC_CFGR_PLLMULL ));
+		 /* Set Bits to 1 */
+		 RCC->CFGR |= (uint32_t)(
+	  	  RCC_CFGR_PLLXTPRE |  //1 means divide HSE by 2
+		  RCC_CFGR_PLLSRC   |
+		  RCC_CFGR_PLLMULL9 );
+	 
+	 	/* Enable PLL */
+	 	RCC->CR |= RCC_CR_PLLON;
+	 
+	 	/* Wait till PLL is ready */
+	 	while((RCC->CR & RCC_CR_PLLRDY) == 0)
+	 	{
+	 	}
+	 
+	 	/* Select PLL as system clock source */
+	 	RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
+	 	RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
+	 
+	 	/* Wait till PLL is used as system clock source */
+	 	while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)0x08)
+	 	{
+	 	}
+	}
+}
+
 
 void SetMotor(int motorNum, uint16_t motorVal){
 	/*
@@ -252,52 +302,6 @@ void UpdateMotor(void){
 	SetMotor(4,MAXSPEED*motorSpeeds.m4);
 }
 
-void manualSchedule(void){
-	//check tasks
-	//1st, every 10second run the detectEmergency
- 
-	if(msTicks - cnt10ms >= 10){
-		cnt10ms = msTicks;
-		//since it has the highest priority, it gets executed immediately
-		detectEmergency();
-	}
-	
-	//2nd, every 100second run the refreshSensorData
-	else if(msTicks-cnt100ms > 100){
-		cnt100ms = msTicks;
-		//this gets executed secondarily
-		refreshSensorData();
-	}
-
-	//3rd, calculateOrientation at once every second
-	else if(msTicks-cnt1000ms1  > 1000){
-		//need to further make sure that it doesn't collide with the other two tasks
-		if(cnt100ms - msTicks < 96 && cnt10ms - msTicks < 6){
-			cnt1000ms1 = msTicks;
-			calculateOrientation();
-		}
-	}
-	//4th, updatePid at onces every second
-	else if(msTicks-cnt1000ms2 > 1000){
-		cnt1000ms2 = msTicks;
-		updatePid(&motorSpeeds);
-		UpdateMotor();
-	}
-	//5th, blink Green LED at 0.5Hz, (on for 1 second, off for 1 sec)
-	else if(msTicks-cnt1000ms3 > 1000){
-		cnt1000ms3 = msTicks;
-		switchGreenLed();
-	}
-	//6th, blink Red LED at 0.25Hz, (on for 2 second, off for 2 sec)
-	else if(msTicks-cnt2000ms > 2000){
-		cnt2000ms = msTicks;
-		switchRedLed();
-	}else{
-		logDebugInfo();
-	}
-	
-}
-
 int flag=0;
 void switchGreenLed(void){
     if (flag){
@@ -333,95 +337,6 @@ void switchRedLed(void){
 }
 
 
-void initHSE(){
-	//pre-defined variables
-	uint32_t HSEStatusCheck;
-	int StartUpCounter = 0;
-    
-	//-----------------------------------------------------------------
-	/* Reset the RCC clock configuration to the default reset state(for debug purpose) */
-	/* Set HSION bit */
-	RCC->CR |= (uint32_t)0x00000001;
-    
-	/* Reset SW, HPRE, PPRE1, PPRE2, ADCPRE and MCO bits */
-	RCC->CFGR &= (uint32_t)0xF8FF0000;
-    
-	/* Reset HSEON, CSSON and PLLON bits */
-	RCC->CR &= (uint32_t)0xFEF6FFFF;
-    
-	/* Reset HSEBYP bit */
-	RCC->CR &= (uint32_t)0xFFFBFFFF;
-    
-	/* Reset PLLSRC, PLLXTPRE, PLLMUL and USBPRE/OTGFSPRE bits */
-	RCC->CFGR &= (uint32_t)0xFF80FFFF;
-    
-	/* Disable all interrupts and clear pending bits  */
-	RCC->CIR = 0x009F0000;
-	
-	//-----------------------------------------------------------------------------------------------
-	//enable HSE:
-	//wait until the HSEON is ready
-	RCC->CR |= ((uint32_t)RCC_CR_HSEON);
-	do {
-        HSEStatusCheck = RCC->CR & RCC_CR_HSERDY;
-        StartUpCounter++;
-    } while((HSEStatusCheck == 0) && (StartUpCounter != 0x1000));
-	
-	if ((RCC->CR & RCC_CR_HSERDY) != RESET) {
- 		HSEStatusCheck = (uint32_t)0x01;
- 	} else {
- 		HSEStatusCheck = (uint32_t)0x00;
- 	}
-    
-	//----------------------------------------------------------------------------------------------
-	//enable PLL and set it as the system clock source
-	if (HSEStatusCheck == (uint32_t)0x01) {
-		/* Enable Prefetch Buffer */
-	 	FLASH->ACR |= FLASH_ACR_PRFTBE;
-        
-	 	/* Flash 2 wait state */
-	 	FLASH->ACR &= (uint32_t)((uint32_t)~FLASH_ACR_LATENCY);
-	 	FLASH->ACR |= (uint32_t)FLASH_ACR_LATENCY_2;
-        
-	 	/* HCLK = SYSCLK */
-	 	RCC->CFGR |= (uint32_t)RCC_CFGR_HPRE_DIV1;
-        
-	 	/* PCLK2 = HCLK */
-	 	RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE2_DIV1;
-        
-	 	/* PCLK1 = HCLK / 2 */
-	 	RCC->CFGR |= (uint32_t)RCC_CFGR_PPRE1_DIV2;
-        
-	 	/*  PLL configuration: PLLCLK = HSE/2 * 9 = 72 MHz */
-	 	/* Set Bits to 0 */
-        RCC->CFGR &= (uint32_t)((uint32_t)~(
-                                            RCC_CFGR_PLLMULL ));
-        /* Set Bits to 1 */
-        RCC->CFGR |= (uint32_t)(
-                                RCC_CFGR_PLLXTPRE |  //1 means divide HSE by 2
-                                RCC_CFGR_PLLSRC   |
-                                RCC_CFGR_PLLMULL9 );
-        
-	 	/* Enable PLL */
-	 	RCC->CR |= RCC_CR_PLLON;
-        
-	 	/* Wait till PLL is ready */
-	 	while((RCC->CR & RCC_CR_PLLRDY) == 0)
-	 	{
-	 	}
-        
-	 	/* Select PLL as system clock source */
-	 	RCC->CFGR &= (uint32_t)((uint32_t)~(RCC_CFGR_SW));
-	 	RCC->CFGR |= (uint32_t)RCC_CFGR_SW_PLL;
-        
-	 	/* Wait till PLL is used as system clock source */
-	 	while ((RCC->CFGR & (uint32_t)RCC_CFGR_SWS) != (uint32_t)0x08)
-	 	{
-	 	}
-	}
-}
-
-
 /*------------------MiraTask----------------------------------*/
 
 /* Described at the top of this file. */
@@ -453,7 +368,7 @@ static void prvRefreshSensorTask( void *pvParameters )
 	/* Just to remove the compiler warning about the unused parameter. */
 	( void ) pvParameters;
     // Start by obtaining the semaphore.
-    
+    xLastExecutionTime = xTaskGetTickCount();
     for( ;; )
     {
         // C
@@ -481,19 +396,26 @@ static void prvRefreshSensorTask( void *pvParameters )
 
 static void prvCalculateOrientationTask( void *pvParameters )
 {
-    
-    if( xSemaphore != NULL )
+    portTickType xLastExecutionTime;
+   
+	/* Just to remove the compiler warning about the unused parameter. */
+	( void ) pvParameters;
+    // Start by obtaining the semaphore.
+    xLastExecutionTime = xTaskGetTickCount();
+   for(;;){ 
+if( xSemaphore != NULL )
     {
         // See if we can obtain the semaphore.  If the semaphore is not available
         // wait 10 ticks to see if it becomes free.
         if( xSemaphoreTake( xSemaphore, ( portTickType ) 10 ) == pdTRUE )
         {
-            
             xSemaphore=NULL;
-            calculateOrientation();
+	    calculateOrientation();
         }
+    }else{
+	 vTaskDelayUntil( &xLastExecutionTime, 200);
+	}
     }
-    
     
 }
 
