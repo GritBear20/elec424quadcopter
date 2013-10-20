@@ -188,7 +188,7 @@ flash:
 
 # program elf into crazyflie flash memory with busblaster
 flash2:
-	openocd2 -d0 -f interface/busblaster.cfg -f target/stm32f1x.cfg -c init -c targets -c "reset halt" \
+	openocd -d0 -f interface/busblaster.cfg -f target/stm32f1x.cfg -c init -c targets -c "reset halt" \
                  -c "flash write_image erase blinky.elf" -c "verify_image cflie.elf" -c "reset run" -c shutdown
 
 #STM utility targets
