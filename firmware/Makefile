@@ -185,6 +185,12 @@ flash:
 	openocd -d0 -f $(OPENOCD_INTERFACE) -f $(OPENOCD_TARGET) -c init -c targets -c "reset halt" \
                  -c "flash write_image erase cflie.elf" -c "verify_image cflie.elf" -c "reset run" -c shutdown
 
+
+# program elf into crazyflie flash memory with busblaster
+flash2:
+	openocd2 -d0 -f interface/busblaster.cfg -f target/stm32f1x.cfg -c init -c targets -c "reset halt" \
+                 -c "flash write_image erase blinky.elf" -c "verify_image cflie.elf" -c "reset run" -c shutdown
+
 #STM utility targets
 halt:
 	openocd -d0 -f $(OPENOCD_INTERFACE) -f $(OPENOCD_TARGET) -c init -c targets -c "halt" -c shutdown
