@@ -5,6 +5,7 @@
 # use the arm compiler 
 CC = arm-none-eabi-gcc
 
+
 # Define paths for all included files.  This assumes STM standard library was placed unmodified 
 # in a folder called lib/ as outlined in the lab description.
 LIB = lib
