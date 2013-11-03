@@ -1,0 +1,19 @@
+{
+  "max_rp": 30, 
+  "max_thrust": 80, 
+  "flightmode": "Normal", 
+  "open_tabs": "Flight Control", 
+  "trim_pitch": 0.0, 
+  "slew_limit": 45, 
+  "slew_rate": 30, 
+  "client_side_xmode": false, 
+  "device_config_mapping": {
+    "BDA Pro Ex": "PS3_Mode_2"
+  }, 
+  "trim_roll": 0.0, 
+  "auto_reconnect": true, 
+  "input_device": "BDA Pro Ex", 
+  "link_uri": "radio://0/10/250K", 
+  "max_yaw": 200, 
+  "min_thrust": 25
+}

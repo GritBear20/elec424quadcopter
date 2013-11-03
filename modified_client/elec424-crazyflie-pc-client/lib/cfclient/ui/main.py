@@ -183,7 +183,6 @@ class MainUI(QtGui.QMainWindow, main_window_class):
         self.logConfigReader.readConfigFiles()
 
         # Add things to helper so tabs can access it
-	cfclient.ui.pluginhelper.inputDeviceAI = self.inputdevice
         cfclient.ui.pluginhelper.cf = self.cf
         cfclient.ui.pluginhelper.inputDeviceReader = self.joystickReader
         cfclient.ui.pluginhelper.logConfigReader = self.logConfigReader

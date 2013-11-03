@@ -79,7 +79,7 @@ class FlightTab(Tab, flight_tab_class):
         super(FlightTab, self).__init__(*args)
         self.setupUi(self)
 
-	self.linkToAiController = helper.inputDeviceAI;
+	self.linkToAiController = helper.inputDeviceReader.inputdevice;
 
         self.tabName = "Flight Control"
         self.menuName = "Flight Control"

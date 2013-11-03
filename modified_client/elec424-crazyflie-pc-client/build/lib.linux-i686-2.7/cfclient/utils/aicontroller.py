@@ -166,9 +166,9 @@ class AiController():
 
     # ELEC424 TODO:  Improve this function as needed
     def setActualData(self,roll,pitch,yaw):
-	self.actualData['Roll'] = roll
-	self.actualData['Pitch'] = pitch
-	self.actualData['Yaw'] = yaw
+	self.actualData['Roll'] = float(roll)
+	self.actualData['Pitch'] = float(pitch)
+	self.actualData['Yaw'] = float(yaw)
 
     def augmentInputWithAi(self):
         """
