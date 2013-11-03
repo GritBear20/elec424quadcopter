@@ -61,6 +61,7 @@ from pygame.locals import *
 
 import time
 import logging
+import copy
 
 logger = logging.getLogger(__name__)
 
@@ -75,17 +76,21 @@ class AiController():
         self.timer1 = 0
         self.lastTime = 0
 	self.error = 0
+	self.minError = 100000000 
+	self.attempedOnSameParamter = 0
+	self.minLandingThrust = 0.79
+	
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.5
+        self.maxThrust = 0.90
         # Determines how fast to take off
         self.thrustInc = 0.021
-        self.takeoffTime = 0.5
+        self.takeoffTime = 1
         # Determines how fast to land
-        self.thrustDec = -0.019
-        self.hoverTime = 1
+        self.thrustDec = -0.1
+        self.hoverTime = 1.5
         # Sets the delay between test flights
         self.repeatDelay = 2
 
@@ -113,7 +118,22 @@ class AiController():
             'sensorfusion6.kp': 0.800000011921, 
             'sensorfusion6.ki': 0.00200000009499, 
             'imu_acc_lpf.factor': 32 }
+	
+	self.cfParamsFlag = copy.deepcopy(self.cfParams)
+	self.initFlag()
 
+    
+    #initialize the optimization flags
+    def initFlag(self):
+	for k,v in self.cfParamsFlag.iteritems():
+	    self.cfParamsFlag[k] = 0
+
+    def checkOptimizationFinished(self):
+	for k,v in self.cfParamsFlag.iteritems():
+	    if self.cfParamsFlag[k] != 3:
+		return False
+	return True
+	    
     def readInput(self):
         """Read input from the selected device."""
 
@@ -199,18 +219,26 @@ class AiController():
             thrustDelta = 0
 	    self.updateError()
         # land
-        elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
-            thrustDelta = self.thrustDec
+        elif self.timer1 < 2.5 * self.takeoffTime + self.hoverTime :
+	    if self.aiData["thrust"] <= self.minLandingThrust:
+		thrustDelta = 0
+	    else:
+		thrustDelta = self.thrustDec
+
 	    self.updateError()
         # repeat
         else:
 	    self.updateError()
+            self.timer1 = -self.repeatDelay
+            thrustDelta = -1
+            # Example Call to pidTuner
+	    if not(self.checkOptimizationFinished()):
+            	self.pidTuner()
+	    else:
+		print "Optimization finished"
+
 	    print "cycle error:"+ str(self.error)
 	    self.error = 0
-            self.timer1 = -self.repeatDelay
-            thrustDelta = 0
-            # Example Call to pidTuner
-            self.pidTuner()
 
 
         self.addThrust( thrustDelta )
@@ -242,14 +270,47 @@ class AiController():
 
     # ELEC424 TODO: Implement this function
     def pidTuner(self):
-        """ 
-        example on how to update crazyflie params
-        """
-        self.cfParams['pid_rate.yaw_kp'] = self.cfParams['pid_rate.yaw_kp'] + 1
-        self.updateCrazyFlieParam('pid_rate.yaw_kp')
+	key = ''
+	tuneScale = 1.05
+        for k,v in self.cfParams.iteritems():
+	    key = k
+	    if self.cfParamsFlag[k] == 0:
+        	self.cfParamsFlag[k] = 1 #it starts to increase
+	        self.cfParams[k] = self.cfParams[k] * tuneScale
+		self.minError = self.error #restart for everyvalue
+		break
+	    elif self.cfParamsFlag[k] == 1:
+		if self.error < self.minError:
+		    self.cfParams[k] = self.cfParams[k] * tuneScale
+		    self.minError = self.error
+		    break
+		else:
+		    self.cfParamsFlag[k] = 2 #it starts to decrease
+		    self.cfParams[k] = self.cfParams[k] / tuneScale
+		    break
 
+	    elif self.cfParamsFlag[k] == 2:
+		if self.error < self.minError:
+		    self.cfParams[k] = self.cfParams[k] / tuneScale
+		    self.minError = self.error
+		    break
+		else:
+		    if self.attempedOnSameParamter < 3:
+		        self.attempedOnSameParamter = self.attempedOnSameParamter + 1
+			self.cfParamsFlag[k] = 0
+		    else:
+		        self.cfParamsFlag[k] = 3 #it achieved optimal value
+		        self.cfParams[k] = self.cfParams[k] * tuneScale
+			self.attempedOnSameParamter = 0
+		    break
+
+	print str(key) + ":" + str(self.cfParamsFlag[key]) + ":" + str(self.cfParams[key])
+        self.updateCrazyFlieParam(key)
+
+    #update using the goodness function
     def updateError(self):
-	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"])
+	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"]) * 0.01
+
 
     # update via param.py -> radiodriver.py -> crazyradio.py -> usbRadio )))
     def updateCrazyFlieParam(self, completename ):
