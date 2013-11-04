@@ -271,27 +271,28 @@ class AiController():
     # ELEC424 TODO: Implement this function
     def pidTuner(self):
 	key = ''
-	tuneScale = 1.05
+	tuneScale = [1.20, 1.05, 1.01]
         for k,v in self.cfParams.iteritems():
 	    key = k
+		tuneFactor = tuneScale[attempedOnSameParamter]
 	    if self.cfParamsFlag[k] == 0:
         	self.cfParamsFlag[k] = 1 #it starts to increase
-	        self.cfParams[k] = self.cfParams[k] * tuneScale
+	        self.cfParams[k] = self.cfParams[k] * tuneFactor
 		self.minError = self.error #restart for everyvalue
 		break
 	    elif self.cfParamsFlag[k] == 1:
 		if self.error < self.minError:
-		    self.cfParams[k] = self.cfParams[k] * tuneScale
+		    self.cfParams[k] = self.cfParams[k] * tuneFactor
 		    self.minError = self.error
 		    break
 		else:
 		    self.cfParamsFlag[k] = 2 #it starts to decrease
-		    self.cfParams[k] = self.cfParams[k] / tuneScale
+		    self.cfParams[k] = self.cfParams[k] / tuneFactor
 		    break
 
 	    elif self.cfParamsFlag[k] == 2:
 		if self.error < self.minError:
-		    self.cfParams[k] = self.cfParams[k] / tuneScale
+		    self.cfParams[k] = self.cfParams[k] / tuneFactor
 		    self.minError = self.error
 		    break
 		else:
@@ -300,7 +301,7 @@ class AiController():
 			self.cfParamsFlag[k] = 0
 		    else:
 		        self.cfParamsFlag[k] = 3 #it achieved optimal value
-		        self.cfParams[k] = self.cfParams[k] * tuneScale
+		        self.cfParams[k] = self.cfParams[k] * tuneFactor
 			self.attempedOnSameParamter = 0
 		    break
 
