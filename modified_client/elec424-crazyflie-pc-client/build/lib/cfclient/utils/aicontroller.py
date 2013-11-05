@@ -79,6 +79,9 @@ class AiController():
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
 	self.minLandingThrust = 0.79
+	self.trainingInterval = 0.3
+        self.lastTrained = 0
+	
 	
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
@@ -87,30 +90,30 @@ class AiController():
         self.maxThrust = 0.90
         # Determines how fast to take off
         self.thrustInc = 0.021
-        self.takeoffTime = 2
+        self.takeoffTime = 1.5
         # Determines how fast to land
         self.thrustDec = -0.1
-        self.hoverTime = 1.5
+        self.hoverTime = 7
         # Sets the delay between test flights
-        self.repeatDelay = 2
+        self.repeatDelay = 0.5
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
             'pid_rate.pitch_kp': 70.0, 
-            'pid_rate.pitch_kd': 0.0, 
-            'pid_rate.pitch_ki': 0.0, 
+            'pid_rate.pitch_kd': 0.1, 
+            'pid_rate.pitch_ki': 0.1, 
             'pid_rate.roll_kp': 70.0, 
-            'pid_rate.roll_kd': 0.0, 
-            'pid_rate.roll_ki': 0.0, 
+            'pid_rate.roll_kd': 0.1, 
+            'pid_rate.roll_ki': 0.1, 
             'pid_rate.yaw_kp': 50.0, 
-            'pid_rate.yaw_kd': 0.0, 
+            'pid_rate.yaw_kd': 0.1, 
             'pid_rate.yaw_ki': 25.0, 
             'pid_attitude.pitch_kp': 3.5, 
-            'pid_attitude.pitch_kd': 0.0, 
+            'pid_attitude.pitch_kd': 0.1, 
             'pid_attitude.pitch_ki': 2.0, 
             'pid_attitude.roll_kp': 3.5, 
-            'pid_attitude.roll_kd': 0.0, 
+            'pid_attitude.roll_kd': 0.1, 
             'pid_attitude.roll_ki': 2.0, 
             'pid_attitude.yaw_kp': 0.0, 
             'pid_attitude.yaw_kd': 0.0, 
@@ -211,6 +214,15 @@ class AiController():
         timeSinceLastAi = currentTime - self.lastTime
         self.timer1 = self.timer1 + timeSinceLastAi
         self.lastTime = currentTime
+        self.updateError()
+        if not(self.checkOptimizationFinished()):
+            if(currentTime - self.lastTrained)>self.trainingInterval:
+                self.pidTuner()
+                self.lastTranied = currentTime
+	else:
+	    print "Optimization finished"
+	    self.initFlag()
+
         
         # Basic AutoPilot steadly increase thrust, hover, land and repeat
         # -------------------------------------------------------------
@@ -220,11 +232,11 @@ class AiController():
         # takeoff
         elif self.timer1 < self.takeoffTime :
             thrustDelta = self.thrustInc
-	    self.updateError()
+	    
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
             thrustDelta = 0
-	    self.updateError()
+	    
         # land
         elif self.timer1 < 2.5 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -232,20 +244,14 @@ class AiController():
 	    else:
 		thrustDelta = self.thrustDec
 
-	    self.updateError()
         # repeat
         else:
-	    self.updateError()
             self.timer1 = -self.repeatDelay
             thrustDelta = -1
             # Example Call to pidTuner
-	    if not(self.checkOptimizationFinished()):
-            	self.pidTuner()
-	    else:
-		print "Optimization finished"
+	    
 
-	    print "cycle error:"+ str(self.error)
-	    self.error = 0
+	    print "cycle error"
 
 
         self.addThrust( thrustDelta )
@@ -278,40 +284,44 @@ class AiController():
     # ELEC424 TODO: Implement this function
     def pidTuner(self):
 	key = ''
-	tuneScale = 1.05
-        for k,v in self.cfParams.iteritems():
-	    key = k
-	    if self.cfParamsFlag[k] == 0:
-        	self.cfParamsFlag[k] = 1 #it starts to increase
-	        self.cfParams[k] = self.cfParams[k] * tuneScale
-		self.minError = self.error #restart for everyvalue
-		break
-	    elif self.cfParamsFlag[k] == 1:
-		if self.error < self.minError:
-		    self.cfParams[k] = self.cfParams[k] * tuneScale
-		    self.minError = self.error
-		    break
-		else:
-		    self.cfParamsFlag[k] = 2 #it starts to decrease
-		    self.cfParams[k] = self.cfParams[k] / tuneScale
-		    break
+	
+	tuneRates = [1.2,1.1,1.05,1.01]
+        for k in self.cfParams:
+            if k!="pid_wattitude.pitch_kp":
+                key = k
+                tuneScale = tuneRates[self.attempedOnSameParamter]
+                if self.cfParamsFlag[k] == 0:
+                    self.cfParamsFlag[k] = 1 #it starts to increase
+                    self.cfParams[k] = self.cfParams[k] * tuneScale
+                    self.minError = self.error #restart for everyvalue
+                    break
+                elif self.cfParamsFlag[k] == 1:
+                    if self.error < self.minError:
+                        self.cfParams[k] = self.cfParams[k] * tuneScale
+                        self.minError = self.error
+                        break
+                    else:
+                        self.cfParamsFlag[k] = 2 #it starts to decrease
+                        self.cfParams[k] = self.cfParams[k] / tuneScale
+                        break
 
-	    elif self.cfParamsFlag[k] == 2:
-		if self.error < self.minError:
-		    self.cfParams[k] = self.cfParams[k] / tuneScale
-		    self.minError = self.error
-		    break
-		else:
-		    if self.attempedOnSameParamter < 3:
-		        self.attempedOnSameParamter = self.attempedOnSameParamter + 1
-			self.cfParamsFlag[k] = 0
-		    else:
-		        self.cfParamsFlag[k] = 3 #it achieved optimal value
-		        self.cfParams[k] = self.cfParams[k] * tuneScale
-			self.attempedOnSameParamter = 0
-		    break
+                elif self.cfParamsFlag[k] == 2:
+                    if self.error < self.minError:
+                        self.cfParams[k] = self.cfParams[k] / tuneScale
+                        self.minError = self.error
+                        break
+                    else:
+                        if self.attempedOnSameParamter < 3:
+                            self.attempedOnSameParamter = self.attempedOnSameParamter + 1
+                            self.cfParamsFlag[k] = 0
+                        else:
+                            self.cfParamsFlag[k] = 3 #it achieved optimal value
+                            self.cfParams[k] = self.cfParams[k] * tuneScale
+                            self.attempedOnSameParamter = 0
+                        break
 
-	print str(key) + ":" + str(self.cfParamsFlag[key]) + ":" + str(self.cfParams[key])
+        self.error = 0
+	print str(key) + ":" + str(self.minError) + ":" + str(self.cfParams[key])
         self.updateCrazyFlieParam(key)
 
     def zieglerTuning(self):
@@ -322,7 +332,7 @@ class AiController():
     
     #update using the goodness function
     def updateError(self):
-	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"]) * 0.01
+	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"]) * 0.0
 
 
     # update via param.py -> radiodriver.py -> crazyradio.py -> usbRadio )))
