@@ -273,37 +273,37 @@ class AiController():
 	key = ''
 	tuneScale = [1.20, 1.05, 1.01]
         for k,v in self.cfParams.iteritems():
-	    key = k
-		tuneFactor = tuneScale[attempedOnSameParamter]
-	    if self.cfParamsFlag[k] == 0:
-        	self.cfParamsFlag[k] = 1 #it starts to increase
-	        self.cfParams[k] = self.cfParams[k] * tuneFactor
-		self.minError = self.error #restart for everyvalue
-		break
-	    elif self.cfParamsFlag[k] == 1:
-		if self.error < self.minError:
-		    self.cfParams[k] = self.cfParams[k] * tuneFactor
-		    self.minError = self.error
-		    break
-		else:
-		    self.cfParamsFlag[k] = 2 #it starts to decrease
-		    self.cfParams[k] = self.cfParams[k] / tuneFactor
-		    break
+            key = k
+            tuneFactor = tuneScale[attempedOnSameParamter]
+            if self.cfParamsFlag[k] == 0:
+                self.cfParamsFlag[k] = 1 #it starts to increase
+                self.cfParams[k] = self.cfParams[k] * tuneFactor
+                self.minError = self.error #restart for everyvalue
+                break
+            elif self.cfParamsFlag[k] == 1:
+                if self.error < self.minError:
+                    self.cfParams[k] = self.cfParams[k] * tuneFactor
+                    self.minError = self.error
+                    break
+                else:
+                    self.cfParamsFlag[k] = 2 #it starts to decrease
+                    self.cfParams[k] = self.cfParams[k] / tuneFactor
+                    break
 
-	    elif self.cfParamsFlag[k] == 2:
-		if self.error < self.minError:
-		    self.cfParams[k] = self.cfParams[k] / tuneFactor
-		    self.minError = self.error
-		    break
-		else:
-		    if self.attempedOnSameParamter < 3:
-		        self.attempedOnSameParamter = self.attempedOnSameParamter + 1
-			self.cfParamsFlag[k] = 0
-		    else:
-		        self.cfParamsFlag[k] = 3 #it achieved optimal value
-		        self.cfParams[k] = self.cfParams[k] * tuneFactor
-			self.attempedOnSameParamter = 0
-		    break
+            elif self.cfParamsFlag[k] == 2:
+                if self.error < self.minError:
+                    self.cfParams[k] = self.cfParams[k] / tuneFactor
+                    self.minError = self.error
+                    break
+                else:
+                    if self.attempedOnSameParamter < 3:
+                        self.attempedOnSameParamter = self.attempedOnSameParamter + 1
+                        self.cfParamsFlag[k] = 0
+                    else:
+                        self.cfParamsFlag[k] = 3 #it achieved optimal value
+                        self.cfParams[k] = self.cfParams[k] * tuneFactor
+                        self.attempedOnSameParamter = 0
+                    break
 
 	print str(key) + ":" + str(self.cfParamsFlag[key]) + ":" + str(self.cfParams[key])
         self.updateCrazyFlieParam(key)
