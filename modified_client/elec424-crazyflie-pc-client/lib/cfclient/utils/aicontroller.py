@@ -78,43 +78,44 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 0.79
-	self.trainingInterval = 0.3
-        self.lastTrained = 0
+	self.minLandingThrust = 0.75
+	self.trainingInterval = 0.4
+        self.lastTrained = 0.0
+        self.timer2 = 0
 	
 	
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.90
+        self.maxThrust = 0.93
         # Determines how fast to take off
-        self.thrustInc = 0.021
-        self.takeoffTime = 1.5
+        self.thrustInc = 0.02
+        self.takeoffTime = 1
         # Determines how fast to land
         self.thrustDec = -0.1
-        self.hoverTime = 7
+        self.hoverTime = 3
         # Sets the delay between test flights
         self.repeatDelay = 0.5
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
-            'pid_rate.pitch_kp': 70.0, 
-            'pid_rate.pitch_kd': 0.1, 
-            'pid_rate.pitch_ki': 0.1, 
-            'pid_rate.roll_kp': 70.0, 
-            'pid_rate.roll_kd': 0.1, 
-            'pid_rate.roll_ki': 0.1, 
-            'pid_rate.yaw_kp': 50.0, 
-            'pid_rate.yaw_kd': 0.1, 
+            'pid_rate.pitch_kp': 85, 
+            'pid_rate.pitch_kd': 0.1452, 
+            'pid_rate.pitch_ki': 0.121, 
+            'pid_rate.roll_kp': 85, 
+            'pid_rate.roll_kd': 0.0865800865801, 
+            'pid_rate.roll_ki': 0.0869740796394, 
+            'pid_rate.yaw_kp': 47.4545454545, 
+            'pid_rate.yaw_kd': 0.0, 
             'pid_rate.yaw_ki': 25.0, 
-            'pid_attitude.pitch_kp': 3.5, 
-            'pid_attitude.pitch_kd': 0.1, 
-            'pid_attitude.pitch_ki': 2.0, 
-            'pid_attitude.roll_kp': 3.5, 
-            'pid_attitude.roll_kd': 0.1, 
-            'pid_attitude.roll_ki': 2.0, 
+            'pid_attitude.pitch_kp': 3.86418554256, 
+            'pid_attitude.pitch_kd': 0.0, 
+            'pid_attitude.pitch_ki': 2.3, 
+            'pid_attitude.roll_kp': 5.3805675, 
+            'pid_attitude.roll_kd': 0.0, 
+            'pid_attitude.roll_ki': 1.5026296018, 
             'pid_attitude.yaw_kp': 0.0, 
             'pid_attitude.yaw_kd': 0.0, 
             'pid_attitude.yaw_ki': 0.0, 
@@ -211,14 +212,17 @@ class AiController():
 
         # Keep track of time
         currentTime = time.time()
+        #print currentTime
         timeSinceLastAi = currentTime - self.lastTime
         self.timer1 = self.timer1 + timeSinceLastAi
+        self.timer2 = self.timer2 + timeSinceLastAi
         self.lastTime = currentTime
         self.updateError()
         if not(self.checkOptimizationFinished()):
-            if(currentTime - self.lastTrained)>self.trainingInterval:
-                self.pidTuner()
-                self.lastTranied = currentTime
+            if self.timer2 > 0.4:
+                print self.timer2
+                #self.pidTuner()
+                self.timer2 = 0
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
@@ -238,7 +242,7 @@ class AiController():
             thrustDelta = 0
 	    
         # land
-        elif self.timer1 < 2.5 * self.takeoffTime + self.hoverTime :
+        elif self.timer1 < 6 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
 		thrustDelta = 0
 	    else:
@@ -286,10 +290,12 @@ class AiController():
 	key = ''
 	
 	tuneRates = [1.2,1.1,1.05,1.01]
-	fixGroup=['sensorfusion6.ki',"imu_acc_lpf.factor","sensorfusion6.kp",'pid_rate.yaw_kp', 'pid_rate.yaw_kd', 'pid_rate.yaw_ki']
+	fixGroup=['sensorfusion6.ki',"imu_acc_lpf.factor","sensorfusion6.kp",'pid_rate.yaw_kp', 'pid_rate.yaw_kd', 'pid_rate.yaw_ki','pid_attitude.pitch_kp']
+	changeGroup=['pid_attitude.pitch_ki']
         for k in self.cfParams:
-            if k not in fixGroup:
+            if k in changeGroup:
                 key = k
+                #print key
                 tuneScale = tuneRates[self.attempedOnSameParamter]
                 if self.cfParamsFlag[k] == 0:
                     self.cfParamsFlag[k] = 1 #it starts to increase

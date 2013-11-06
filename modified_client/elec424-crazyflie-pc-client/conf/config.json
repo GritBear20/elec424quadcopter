@@ -5,7 +5,7 @@
   }, 
   "slew_rate": 30, 
   "client_side_xmode": false, 
-  "auto_reconnect": false, 
+  "auto_reconnect": true, 
   "input_device": "Pro Ex", 
   "link_uri": "radio://0/10/250K", 
   "max_yaw": 200, 
