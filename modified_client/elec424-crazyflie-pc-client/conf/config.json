@@ -1,20 +1,20 @@
 {
   "device_config_mapping": {
-    "Pro Ex": "Generic_OS_X", 
+    "Pro Ex": "PS3_Mode_2", 
     "BDA Pro Ex": "PS3_Mode_2"
   }, 
   "slew_rate": 30, 
   "client_side_xmode": false, 
-  "auto_reconnect": true, 
+  "auto_reconnect": false, 
   "input_device": "Pro Ex", 
-  "link_uri": "radio://0/10/250K", 
+  "link_uri": "radio://0/21/250K", 
   "max_yaw": 200, 
-  "flightmode": "Normal", 
+  "flightmode": "Advanced", 
   "max_rp": 30, 
   "open_tabs": "Flight Control,Log TOC,Parameters", 
   "trim_pitch": 0.0, 
   "slew_limit": 45, 
   "trim_roll": 0.0, 
-  "max_thrust": 80, 
-  "min_thrust": 25
+  "max_thrust": 99.99, 
+  "min_thrust": 25.0
 }

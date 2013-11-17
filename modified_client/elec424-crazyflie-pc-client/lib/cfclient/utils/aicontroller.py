@@ -78,7 +78,7 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 0.75
+	self.minLandingThrust = 1
 	self.trainingInterval = 0.4
         self.lastTrained = 0.0
         self.timer2 = 0
@@ -88,15 +88,15 @@ class AiController():
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.93
+        self.maxThrust = 1
         # Determines how fast to take off
-        self.thrustInc = 0.02
-        self.takeoffTime = 1
+        self.thrustInc = 0.01
+        self.takeoffTime = 1.5
         # Determines how fast to land
-        self.thrustDec = -0.1
-        self.hoverTime = 3
+        self.thrustDec = -0.01
+        self.hoverTime = 15
         # Sets the delay between test flights
-        self.repeatDelay = 0.5
+        self.repeatDelay = 0
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
@@ -242,7 +242,7 @@ class AiController():
             thrustDelta = 0
 	    
         # land
-        elif self.timer1 < 6 * self.takeoffTime + self.hoverTime :
+        elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
 		thrustDelta = 0
 	    else:
@@ -251,7 +251,7 @@ class AiController():
         # repeat
         else:
             self.timer1 = -self.repeatDelay
-            thrustDelta = -1
+            thrustDelta = 0
             # Example Call to pidTuner
 	    
 
