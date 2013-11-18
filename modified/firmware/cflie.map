@@ -45,7 +45,7 @@ Archive member included because of file (symbol)
 /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/armv7-m/libgcc.a(_arm_fixdfsi.o)
                               /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/../../../../arm-none-eabi/lib/armv7-m/libm.a(lib_a-e_rem_pio2.o) (__aeabi_d2iz)
 /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/armv7-m/libgcc.a(_arm_fixunsdfsi.o)
-                              bin/i2croutines.o (__aeabi_d2uiz)
+                              bin/adc.o (__aeabi_d2uiz)
 /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/armv7-m/libgcc.a(_arm_truncdfsf2.o)
                               bin/adc.o (__aeabi_d2f)
 /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/armv7-m/libgcc.a(_arm_addsubsf3.o)
@@ -9492,6 +9492,7 @@ __aeabi_d2uiz                                     /home/gritbear/bin/gcc-arm-non
                                                   bin/ledseq.o
                                                   bin/crtp.o
                                                   bin/i2croutines.o
+                                                  bin/adc.o
 __aeabi_dadd                                      /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/armv7-m/libgcc.a(_arm_addsubdf3.o)
                                                   /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/../../../../arm-none-eabi/lib/armv7-m/libm.a(lib_a-s_scalbn.o)
                                                   /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/../../../../arm-none-eabi/lib/armv7-m/libm.a(lib_a-s_floor.o)

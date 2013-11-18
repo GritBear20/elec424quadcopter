@@ -64,14 +64,14 @@ static bool isInit;
 volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
 
 // The proximity in inches from the sensor face
-static float proximFront;
-static float proximBottom;
+static uint32_t proximFront;
+static uint32_t proximBottom;
 
 xQueueHandle      adcQueue;
 
 LOG_GROUP_START(adc)
-LOG_ADD(LOG_FLOAT, vproxFront, &proximFront)
-LOG_ADD(LOG_FLOAT, vproxBottom, &proximBottom)
+LOG_ADD(LOG_INT32, vproxFront, &proximFront)
+LOG_ADD(LOG_INT32, vproxBottom, &proximBottom)
 LOG_GROUP_STOP(adc)
 
 static void adcDmaInit(void)
@@ -203,7 +203,7 @@ void adcInit(void)
 
 //==================================
   // ADC2 channel sequence
-  ADC_RegularChannelConfig(ADC2, CH_VBAT, 1, ADC_SampleTime_28Cycles5);
+  ADC_RegularChannelConfig(ADC2, CH_VBAT, 1, ADC_SampleTime_13Cycles5);
   ADC_RegularChannelConfig(ADC2, CH_PROX_FRONT, 2, ADC_SampleTime_13Cycles5);
   ADC_RegularChannelConfig(ADC2, CH_PROX_BOTTOM, 3, ADC_SampleTime_13Cycles5);
 
@@ -313,8 +313,8 @@ void adcTask(void *param)
 
 void proxSensorUpdate(AdcGroup* adcValues)
 {
-    proximFront = (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) / PROX_CON);    
-    proximBottom = (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) / PROX_CON);
+    proximFront = (uint32_t) (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) / PROX_CON);    
+    proximBottom = (uint32_t) (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) / PROX_CON);
 }
 
 
