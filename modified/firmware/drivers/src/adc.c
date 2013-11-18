@@ -38,6 +38,7 @@
 #include "pm.h"
 #include "nvicconf.h"
 #include "imu.h"
+#include "log.h"
 
 #ifdef ADC_OUTPUT_RAW_DATA
 #include "uart.h"
@@ -46,18 +47,32 @@
 
 // PORT A
 #define GPIO_VBAT        GPIO_Pin_3
+#define GPIO_PROX_FRONT	 GPIO_Pin_4
+#define GPIO_PROX_BOTTOM	 GPIO_Pin_5
 
 // CHANNELS
-#define NBR_OF_ADC_CHANNELS   1
+#define NBR_OF_ADC_CHANNELS   3
 #define CH_VBAT               ADC_Channel_3
 
 #define CH_VREF               ADC_Channel_17
 #define CH_TEMP               ADC_Channel_16
 
+#define CH_PROX_FRONT              ADC_Channel_4
+#define CH_PROX_BOTTOM             ADC_Channel_5
+
 static bool isInit;
 volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
 
+// The proximity in inches from the sensor face
+static float proximFront;
+static float proximBottom;
+
 xQueueHandle      adcQueue;
+
+LOG_GROUP_START(adc)
+LOG_ADD(LOG_FLOAT, vproxFront, &proximFront)
+LOG_ADD(LOG_FLOAT, vproxBottom, &proximBottom)
+LOG_GROUP_STOP(adc)
 
 static void adcDmaInit(void)
 {
@@ -126,11 +141,20 @@ void adcInit(void)
   TIM_TimeBaseInitTypeDef TIM_TimeBaseStructure;
   TIM_OCInitTypeDef TIM_OCInitStructure;
   NVIC_InitTypeDef NVIC_InitStructure;
+  GPIO_InitTypeDef GPIO_InitStructure;
 
   // Enable TIM2, GPIOA and ADC1 clock
   RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM2, ENABLE);
   RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1 | RCC_APB2Periph_ADC2 |
                          RCC_APB2Periph_GPIOA | RCC_APB2Periph_AFIO, ENABLE);
+
+//=================================
+  //GPIO Init Strcuture for proximity sensor
+  GPIO_InitStructure.GPIO_Pin = GPIO_PROX_FRONT;
+  GPIO_InitStructure.GPIO_Pin |= GPIO_PROX_BOTTOM;
+  GPIO_InitStructure.GPIO_Mode = GPIO_Mode_AIN;
+  GPIO_InitStructure.GPIO_Speed = GPIO_Speed_10MHz;
+  GPIO_Init(GPIOA, &GPIO_InitStructure);
 
   //Timer configuration
   TIM_TimeBaseStructure.TIM_Period = ADC_TRIG_PERIOD;
@@ -161,9 +185,12 @@ void adcInit(void)
   ADC_InitStructure.ADC_NbrOfChannel = NBR_OF_ADC_CHANNELS;
   ADC_Init(ADC1, &ADC_InitStructure);
 
+//========================================
   // ADC1 channel sequence
-  ADC_RegularChannelConfig(ADC1, CH_VREF, 1, ADC_SampleTime_28Cycles5);
-
+  ADC_RegularChannelConfig(ADC1, CH_VREF, 1, ADC_SampleTime_13Cycles5);
+  ADC_RegularChannelConfig(ADC1, CH_VREF, 2, ADC_SampleTime_13Cycles5);
+  ADC_RegularChannelConfig(ADC1, CH_VREF, 3, ADC_SampleTime_13Cycles5);
+  
   // ADC2 configuration
   ADC_DeInit(ADC2);
   ADC_InitStructure.ADC_Mode = ADC_Mode_RegSimult;
@@ -174,8 +201,11 @@ void adcInit(void)
   ADC_InitStructure.ADC_NbrOfChannel = NBR_OF_ADC_CHANNELS;
   ADC_Init(ADC2, &ADC_InitStructure);
 
+//==================================
   // ADC2 channel sequence
   ADC_RegularChannelConfig(ADC2, CH_VBAT, 1, ADC_SampleTime_28Cycles5);
+  ADC_RegularChannelConfig(ADC2, CH_PROX_FRONT, 2, ADC_SampleTime_13Cycles5);
+  ADC_RegularChannelConfig(ADC2, CH_PROX_BOTTOM, 3, ADC_SampleTime_13Cycles5);
 
   // Enable ADC1
   ADC_Cmd(ADC1, ENABLE);
@@ -274,9 +304,17 @@ void adcTask(void *param)
     xQueueReceive(adcQueue, &adcRawValues, portMAX_DELAY);
     adcDecimate(adcRawValues, &adcValues);  // 10% CPU
     pmBatteryUpdate(&adcValues);
-
+    proxSensorUpdate(&adcValues);
 #ifdef ADC_OUTPUT_RAW_DATA
     uartSendDataDma(sizeof(AdcGroup)*ADC_MEAN_SIZE, (uint8_t*)adcRawValues);
 #endif
   }
 }
+
+void proxSensorUpdate(AdcGroup* adcValues)
+{
+    proximFront = (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) / PROX_CON);    
+    proximBottom = (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) / PROX_CON);
+}
+
+

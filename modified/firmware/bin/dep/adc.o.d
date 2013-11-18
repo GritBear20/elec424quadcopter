@@ -31,7 +31,7 @@ adc.o: drivers/src/adc.c config/stm32f10x_conf.h \
  /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/include/stdbool.h \
  config/config.h drivers/interface/nrf24l01.h \
  drivers/interface/nRF24L01reg.h hal/interface/pm.h config/nvicconf.h \
- hal/interface/imu.h utils/interface/filter.h
+ hal/interface/imu.h utils/interface/filter.h modules/interface/log.h
 
 config/stm32f10x_conf.h:
 
@@ -118,3 +118,5 @@ config/nvicconf.h:
 hal/interface/imu.h:
 
 utils/interface/filter.h:
+
+modules/interface/log.h:
