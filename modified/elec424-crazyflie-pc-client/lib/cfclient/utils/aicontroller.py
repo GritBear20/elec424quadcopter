@@ -79,45 +79,47 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 0.75
+	self.minLandingThrust = 0.7
+	self.minControlThrust = 0.8
 	self.trainingInterval = 0.3
         self.lastTrained = 0.0
         self.timer2 = 0
 	self.timer3 = 0
         self.yawDelta = 0.001
 	self.height = 0
-	
+	self.alreadySet = False
+	self.previousHeight = 0	
+
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.92
+        self.maxThrust = 1
         # Determines how fast to take off
-        self.thrustInc = 0.02
-        self.takeoffTime = 1
+        self.thrustInc = 0.04
+        self.takeoffTime = 0.5
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 8
+        self.hoverTime = 12
         # Sets the delay between test flights
         self.repeatDelay = 0
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
-                # parameters pulled from json with defaults from crazyflie pid.h
         self.cfParams = {
             'pid_rate.pitch_kp': 124, 
             'pid_rate.pitch_kd': 0.1452, 
             'pid_rate.pitch_ki': 0.121, 
-            'pid_rate.roll_kp': 120, 
+            'pid_rate.roll_kp': 139, 
             'pid_rate.roll_kd': 0.0865800865801, 
             'pid_rate.roll_ki': 0.0869740796394, 
             'pid_rate.yaw_kp': 47.4545454545, 
             'pid_rate.yaw_kd': 0.0, 
             'pid_rate.yaw_ki': 25.0, 
-            'pid_attitude.pitch_kp': 2.86518949832, 
+            'pid_attitude.pitch_kp': 3.90418554256, 
             'pid_attitude.pitch_kd': 0.0, 
-            'pid_attitude.pitch_ki': 2.323, 
-            'pid_attitude.roll_kp': 5.85675, 
+            'pid_attitude.pitch_ki': 2.3, 
+            'pid_attitude.roll_kp': 5.6405675, 
             'pid_attitude.roll_kd': 0.0, 
             'pid_attitude.roll_ki': 1.5026296018, 
             'pid_attitude.yaw_kp': 0.0, 
@@ -227,14 +229,16 @@ class AiController():
 	self.timer3 = self.timer3 + timeSinceLastAi
         self.lastTime = currentTime
         self.updateError()
-
-
+	if not self.alreadySet:
+	    self.alreadySet = True
+	    for key in self.cfParams:
+		self.updateCrazyFlieParam(key)
             
         if not(self.checkOptimizationFinished()):
             if self.timer2 > self.trainingInterval:
                 #print "miramira"
                 #print self.timer2
-                self.pidTuner()
+                #self.pidTuner()
                 #self.timer2 = 0
                 #self.addYaw(self.yawDelta)
                 pass
@@ -245,7 +249,12 @@ class AiController():
         
         # Basic AutoPilot steadly increase thrust, hover, land and repeat
         # -------------------------------------------------------------
-        # delay before takeoff 
+        # delay before takeoff
+	if self.timer3 > 0.005:
+                #print "miramira"
+                self.timer3 = 0
+                self.addYaw(self.yawDelta)
+ 
         if self.timer1 < 0:
             thrustDelta = 0
         # takeoff
@@ -255,10 +264,7 @@ class AiController():
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
             thrustDelta = self.adjustThrust(self.height,40)
-	    if self.timer3 > 0.005:
-                #print "miramira"
-                self.timer3 = 0
-                self.addYaw(self.yawDelta)
+	    
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -302,7 +308,7 @@ class AiController():
         self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
         if (self.aiData["yaw"] > 0.72):
             self.aiData["yaw"] = self.aiData["yaw"] - 1.44
-	self.aiData["yaw"] = 0
+	self.aiData["yaw"] = 1
         
         
     # ELEC424 TODO: Implement this function
@@ -349,7 +355,7 @@ class AiController():
 
         self.error = 0
 	print str(key) + ":" + str(self.minError) + ":" + str(self.cfParams[key])
-        self.updateCrazyFlieParam(key)
+	
 
     def zieglerTuning(self):
         for param in cfParams:
@@ -415,14 +421,26 @@ class AiController():
 
     def adjustThrust(self, sensorHeight, targetHeight):
 	diff = sensorHeight - targetHeight
+	heightDiv = sensorHeight - self.previousHeight
 	print diff
 	thrustDelta = 0
+	self.previousHeight = sensorHeight
         if(diff >0):
-	    thrustDelta = -0.01
+	    if(heightDiv > -0.5):
+	        thrustDelta = -0.03
+	    else:
+		thrustDelta = 0
 	else:
-	    thrustDelta = 0.03
-
-	if(self.aiData["thrust"] <= self.minLandingThrust):
-	    thrustDelta = 0.1
+	    if(heightDiv > 0.5):
+	        thrustDelta = 0
+	    else:
+		thrustDelta = 0.05
+	if diff > 12:
+	    self.maxThrust = 0.88
+	else :
+	    self.maxThrust = 1
 	
+	if(self.aiData["thrust"] < self.minControlThrust):
+	    thrustDelta = 0.01
+	print self.aiData["thrust"]
 	return thrustDelta
