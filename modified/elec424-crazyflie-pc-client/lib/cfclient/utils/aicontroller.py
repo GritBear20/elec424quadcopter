@@ -91,7 +91,7 @@ class AiController():
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
         self.maxThrust = 1
         # Determines how fast to take off
-        self.thrustInc = 0.01
+        self.thrustInc = 0.02
         self.takeoffTime = 1.5
         # Determines how fast to land
         self.thrustDec = -0.01
@@ -399,4 +399,16 @@ class AiController():
             j = pygame.joystick.Joystick(i)
             dev.append({"id":i, "name" : j.get_name()})
         return dev
+
+    
+    def adjustThrust(self, sensorHeight, targetHeight):
+	diff = sensorHeight - targetHeight
+        if(diff >0):
+	    return -0.03
+	else:
+	    return 0.03
+
+
+
+
 
