@@ -79,10 +79,11 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 0.7
+	self.minLandingThrust = 0.75
 	self.trainingInterval = 0.4
         self.lastTrained = 0.0
         self.timer2 = 0
+	self.timer3 = 0
         self.yawDelta = 0.001
 	self.height = 0
 	
@@ -90,32 +91,33 @@ class AiController():
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.8
+        self.maxThrust = 0.9
         # Determines how fast to take off
-        self.thrustInc = 0.01
+        self.thrustInc = 0.02
         self.takeoffTime = 0.5
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 15
+        self.hoverTime = 8
         # Sets the delay between test flights
         self.repeatDelay = 0
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
+                # parameters pulled from json with defaults from crazyflie pid.h
         self.cfParams = {
-            'pid_rate.pitch_kp': 85, 
+            'pid_rate.pitch_kp': 124, 
             'pid_rate.pitch_kd': 0.1452, 
             'pid_rate.pitch_ki': 0.121, 
-            'pid_rate.roll_kp': 85, 
+            'pid_rate.roll_kp': 139, 
             'pid_rate.roll_kd': 0.0865800865801, 
             'pid_rate.roll_ki': 0.0869740796394, 
             'pid_rate.yaw_kp': 47.4545454545, 
             'pid_rate.yaw_kd': 0.0, 
             'pid_rate.yaw_ki': 25.0, 
-            'pid_attitude.pitch_kp': 3.86418554256, 
+            'pid_attitude.pitch_kp': 3.90418554256, 
             'pid_attitude.pitch_kd': 0.0, 
-            'pid_attitude.pitch_ki': 2.3, 
-            'pid_attitude.roll_kp': 5.3805675, 
+            'pid_attitude.pitch_ki': 2.323, 
+            'pid_attitude.roll_kp': 5.6905675, 
             'pid_attitude.roll_kd': 0.0, 
             'pid_attitude.roll_ki': 1.5026296018, 
             'pid_attitude.yaw_kp': 0.0, 
@@ -222,19 +224,17 @@ class AiController():
         timeSinceLastAi = currentTime - self.lastTime
         self.timer1 = self.timer1 + timeSinceLastAi
         self.timer2 = self.timer2 + timeSinceLastAi
+	self.timer3 = self.timer3 + timeSinceLastAi
         self.lastTime = currentTime
         self.updateError()
-        if self.timer2 > 0.005:
-            #print "miramira"
-            self.timer2 = 0
-            self.addYaw(self.yawDelta)
+
 
             
         if not(self.checkOptimizationFinished()):
-            if self.timer2 > 1:
+            if self.timer2 > self.trainingInterval:
                 #print "miramira"
                 #print self.timer2
-                #self.pidTuner()
+                self.pidTuner()
                 #self.timer2 = 0
                 #self.addYaw(self.yawDelta)
                 pass
@@ -254,7 +254,11 @@ class AiController():
 	    
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
-            thrustDelta = self.adjustThrust(self.height,36)
+            thrustDelta = self.adjustThrust(self.height,40)
+	    if self.timer3 > 0.005:
+                #print "miramira"
+                self.timer3 = 0
+                self.addYaw(self.yawDelta)
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -266,11 +270,6 @@ class AiController():
         else:
             self.timer1 = -self.repeatDelay
             thrustDelta = 0
-            # Example Call to pidTuner
-	    
-
-	    print "cycle error"
-
 
         self.addThrust( thrustDelta )
 
@@ -303,6 +302,7 @@ class AiController():
         self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
         if (self.aiData["yaw"] > 0.72):
             self.aiData["yaw"] = self.aiData["yaw"] - 1.44
+	self.aiData["yaw"] = 1.5
         
         
     # ELEC424 TODO: Implement this function
@@ -311,7 +311,7 @@ class AiController():
 	
 	tuneRates = [1.2,1.1,1.05,1.01]
 	fixGroup=['sensorfusion6.ki',"imu_acc_lpf.factor","sensorfusion6.kp",'pid_rate.yaw_kp', 'pid_rate.yaw_kd', 'pid_rate.yaw_ki','pid_attitude.pitch_kp']
-	changeGroup=['pid_attitude.pitch_ki']
+	changeGroup=['pid_attitude.roll_kp']
         for k in self.cfParams:
             if k in changeGroup:
                 key = k
@@ -416,7 +416,13 @@ class AiController():
     def adjustThrust(self, sensorHeight, targetHeight):
 	diff = sensorHeight - targetHeight
 	print diff
+	thrustDelta = 0
         if(diff >0):
-	    return -0.005
+	    thrustDelta = -0.01
 	else:
-	    return 0.005
+	    thrustDelta = 0.03
+
+	if(self.aiData["thrust"] <= self.minLandingThrust):
+	    thrustDelta = 0.1
+	
+	return thrustDelta
