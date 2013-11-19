@@ -403,10 +403,16 @@ class AiController():
     
     def adjustThrust(self, sensorHeight, targetHeight):
 	diff = sensorHeight - targetHeight
-        if(diff >0):
-	    return -0.03
+        deltaThrust = 0
+	if(diff >0):
+	    deltaThrust = -0.03
 	else:
-	    return 0.03
+	    deltaThrust = 0.03
+
+	if(self.aiData["thrust"] < 0.7):
+	    deltaThrust = 0;
+
+	return deltaThrust;
 
 
 
