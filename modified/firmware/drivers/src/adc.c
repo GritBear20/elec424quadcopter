@@ -47,8 +47,8 @@
 
 // PORT A
 #define GPIO_VBAT        GPIO_Pin_3
-#define GPIO_PROX_FRONT	 GPIO_Pin_7
-#define GPIO_PROX_BOTTOM	 GPIO_Pin_6
+#define GPIO_PROX_FRONT	 GPIO_Pin_6
+#define GPIO_PROX_BOTTOM	 GPIO_Pin_7
 
 // CHANNELS
 #define NBR_OF_ADC_CHANNELS   3
@@ -57,8 +57,8 @@
 #define CH_VREF               ADC_Channel_17
 #define CH_TEMP               ADC_Channel_16
 
-#define CH_PROX_FRONT              ADC_Channel_7
-#define CH_PROX_BOTTOM             ADC_Channel_6
+#define CH_PROX_FRONT              ADC_Channel_6
+#define CH_PROX_BOTTOM             ADC_Channel_7
 
 static bool isInit;
 volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
@@ -67,11 +67,24 @@ volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
 static uint32_t proximFront;
 static uint32_t proximBottom;
 
+static float proximFrontFloat;
+static float proximBottomFloat;
+
+static uint16_t proximFrontRaw;
+static uint16_t proximBottomRaw;
+
+static uint16_t proximRef;
+
 xQueueHandle      adcQueue;
 
 LOG_GROUP_START(adc)
 LOG_ADD(LOG_INT32, vproxFront, &proximFront)
 LOG_ADD(LOG_INT32, vproxBottom, &proximBottom)
+LOG_ADD(LOG_FLOAT, vproxFrontFloat, &proximFrontFloat)
+LOG_ADD(LOG_FLOAT, vproxBottomFloat, &proximBottomFloat)
+LOG_ADD(LOG_INT16, proximFrontRaw, &proximFrontRaw)
+LOG_ADD(LOG_INT16, proximBottomRaw, &proximBottomRaw)
+LOG_ADD(LOG_INT16, proximRef, &proximRef)
 LOG_GROUP_STOP(adc)
 
 static void adcDmaInit(void)
@@ -313,8 +326,16 @@ void adcTask(void *param)
 
 void proxSensorUpdate(AdcGroup* adcValues)
 {
-    proximFront = (uint32_t) (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) / PROX_CON);    
-    proximBottom = (uint32_t) (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) / PROX_CON);
+    proximFrontRaw = adcValues->vproxFront.val;
+    proximBottomRaw = adcValues->vproxBottom.val;
+
+    proximRef = adcValues->vproxFront.vref;
+
+    proximFrontFloat = (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) );    
+    proximBottomFloat = (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) );
+
+    proximFront = (uint32_t) (proximFrontFloat/ PROX_CON);    
+    proximBottom = (uint32_t) (proximBottomFloat/ PROX_CON);
 }
 
 

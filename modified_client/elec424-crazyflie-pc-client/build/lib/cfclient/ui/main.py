@@ -26,7 +26,7 @@
 #  Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
-CrazyflieThe main file for the Crazyflie control application.
+The main file for the Crazyflie control application.
 """
 
 __author__ = 'Bitcraze AB'
@@ -56,8 +56,7 @@ from cfclient.utils.config_manager import ConfigManager
 import cfclient.ui.toolboxes
 import cfclient.ui.tabs
 import cflib.crtp
-from cfclient.utils.logconfigreader import LogConfig
-from cfclient.utils.logconfigreader import LogVariable
+
 from cfclient.ui.dialogs.bootloader import BootloaderDialog
 from cfclient.ui.dialogs.about import AboutDialog
 
@@ -154,11 +153,7 @@ class MainUI(QtGui.QMainWindow, main_window_class):
         #                                      Qt.DirectConnection)
         self.joystickReader.input_updated.add_callback(
                                          self.cf.commander.send_setpoint)
-        # Add Adc Log:
-        print "oh hahaMiramira!!"
-        self.cf.connectSetupFinished.add_callback(
-                                                   self.connectSetupFinished)
-        
+
         # Connection callbacks and signal wrappers for UI protection
         self.cf.connectSetupFinished.add_callback(
                                               self.connectionDoneSignal.emit)
@@ -180,7 +175,6 @@ class MainUI(QtGui.QMainWindow, main_window_class):
         self.linkQualitySignal.connect(
                    lambda percentage: self.linkQualityBar.setValue(percentage))
 
-        
         # Set UI state in disconnected buy default
         self.setUIState(UIState.DISCONNECTED)
 
@@ -498,20 +492,3 @@ class MainUI(QtGui.QMainWindow, main_window_class):
     def closeAppRequest(self):
         self.close()
         app.exit(0)
-
-
-    def connectSetupFinished(self, linkURI):
-        adc_log_conf = LogConfig("Adc", 10)
-        adc_log_conf.addVariable(LogVariable("acc.x","float"))
-        adc_log_conf.addVariable(LogVariable("acc.y","float"))
-        self.adc_log = self.cf.log.create_log_packet(adc_log_conf)
-        if self.adc_log is not None:
-            self.adc_log.dataReceived.add_callback(self.log_adc_data)
-            self.adc_log.start()
-        else:
-            print("adc Values not found in log TOC")
-        
-    def log_adc_data(self,data):
-        print "yadayada"
-        logging.info("AdcValue:front : %d, bottom %d" % (data["acc.x"],data["acc.y"]))
-        

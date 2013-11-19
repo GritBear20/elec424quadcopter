@@ -1,11 +1,42 @@
 {
   "logconfig": {
-    "logblock":
-    {"name": "Stabilizer", "period":20, "min":-180, "max":180,
-     "variables": [
-          {"name":"stabilizer.roll", "type":"TOC", "stored_as":"float", "fetch_as":"float"},
-          {"name":"stabilizer.pitch", "type":"TOC", "stored_as":"float", "fetch_as":"float"},
-          {"name":"stabilizer.yaw", "type":"TOC", "stored_as":"float", "fetch_as":"float"}
-     ]}
+    "logblock": {
+      "max": 180, 
+      "variables": [
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "adc.vproxBottom", 
+          "fetch_as": "float"
+        }, 
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "adc.vproxFront", 
+          "fetch_as": "float"
+        }, 
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.pitch", 
+          "fetch_as": "float"
+        }, 
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.roll", 
+          "fetch_as": "float"
+        }, 
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.yaw", 
+          "fetch_as": "float"
+        }
+      ], 
+      "min": -180, 
+      "name": "Stabilizer", 
+      "period": 20
+    }
   }
 }

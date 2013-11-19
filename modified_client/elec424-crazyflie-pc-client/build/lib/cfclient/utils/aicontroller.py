@@ -63,7 +63,6 @@ import time
 import logging
 import copy
 
-
 logger = logging.getLogger(__name__)
 
 class AiController():
@@ -79,25 +78,25 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 1
+	self.minLandingThrust = 0.7
 	self.trainingInterval = 0.4
         self.lastTrained = 0.0
         self.timer2 = 0
-        self.yawDelta = 2
+	
 	
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 1
+        self.maxThrust = 0.9
         # Determines how fast to take off
-        self.thrustInc = 0.01
-        self.takeoffTime = 1.5
+        self.thrustInc = 0.02
+        self.takeoffTime = 1
         # Determines how fast to land
-        self.thrustDec = -0.01
-        self.hoverTime = 15
+        self.thrustDec = -0.1
+        self.hoverTime = 4
         # Sets the delay between test flights
-        self.repeatDelay = 0
+        self.repeatDelay = 0.5
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
@@ -145,8 +144,7 @@ class AiController():
 	    if self.cfParamsFlag[k] != 3:
 		return False
 	return True
-
-            
+	    
     def readInput(self):
         """Read input from the selected device."""
 
@@ -222,10 +220,9 @@ class AiController():
         self.updateError()
         if not(self.checkOptimizationFinished()):
             if self.timer2 > 0.4:
-                #print self.timer2
+                print self.timer2
                 #self.pidTuner()
                 self.timer2 = 0
-                self.addYaw(self.yawDelta)
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
@@ -245,7 +242,7 @@ class AiController():
             thrustDelta = 0
 	    
         # land
-        elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
+        elif self.timer1 < 4 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
 		thrustDelta = 0
 	    else:
@@ -254,7 +251,7 @@ class AiController():
         # repeat
         else:
             self.timer1 = -self.repeatDelay
-            thrustDelta = 0
+            thrustDelta = -1
             # Example Call to pidTuner
 	    
 
@@ -263,13 +260,12 @@ class AiController():
 
         self.addThrust( thrustDelta )
 
- 
 
         # override Other inputs as needed
         # --------------------------------------------------------------
         # self.data["roll"] = self.aiData["roll"]
         # self.data["pitch"] = self.aiData["pitch"]
-        self.data["yaw"] = self.aiData["yaw"]
+        # self.data["yaw"] = self.aiData["yaw"]
         # self.data["pitchcal"] = self.aiData["pitchcal"]
         # self.data["rollcal"] = self.aiData["rollcal"]
         # self.data["estop"] = self.aiData["estop"]
@@ -288,10 +284,7 @@ class AiController():
         # overwrite joystick thrust values
         self.data["thrust"] = self.aiData["thrust"]
 
-    def addYaw(self,yawDelta):
-        self.aiData["yaw"] =self.aiData["yaw"]+yawDelta
-        
-        
+
     # ELEC424 TODO: Implement this function
     def pidTuner(self):
 	key = ''
