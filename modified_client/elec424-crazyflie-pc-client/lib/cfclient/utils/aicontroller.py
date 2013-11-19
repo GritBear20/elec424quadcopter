@@ -78,8 +78,8 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 1
-	self.trainingInterval = 0.4
+	self.minLandingThrust = 0.75
+	self.trainingInterval = 0.25
         self.lastTrained = 0.0
         self.timer2 = 0
 	
@@ -88,32 +88,32 @@ class AiController():
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 1
+        self.maxThrust = 0.92
         # Determines how fast to take off
-        self.thrustInc = 0.01
-        self.takeoffTime = 1.5
+        self.thrustInc = 0.015
+        self.takeoffTime = 1.7
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 15
+        self.hoverTime = 3
         # Sets the delay between test flights
-        self.repeatDelay = 0
+        self.repeatDelay = 3
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
-            'pid_rate.pitch_kp': 85, 
+            'pid_rate.pitch_kp': 124, 
             'pid_rate.pitch_kd': 0.1452, 
             'pid_rate.pitch_ki': 0.121, 
-            'pid_rate.roll_kp': 85, 
+            'pid_rate.roll_kp': 139, 
             'pid_rate.roll_kd': 0.0865800865801, 
             'pid_rate.roll_ki': 0.0869740796394, 
             'pid_rate.yaw_kp': 47.4545454545, 
             'pid_rate.yaw_kd': 0.0, 
             'pid_rate.yaw_ki': 25.0, 
-            'pid_attitude.pitch_kp': 3.86418554256, 
+            'pid_attitude.pitch_kp': 3.90418554256, 
             'pid_attitude.pitch_kd': 0.0, 
             'pid_attitude.pitch_ki': 2.3, 
-            'pid_attitude.roll_kp': 5.3805675, 
+            'pid_attitude.roll_kp': 5.6405675, 
             'pid_attitude.roll_kd': 0.0, 
             'pid_attitude.roll_ki': 1.5026296018, 
             'pid_attitude.yaw_kp': 0.0, 
@@ -219,9 +219,9 @@ class AiController():
         self.lastTime = currentTime
         self.updateError()
         if not(self.checkOptimizationFinished()):
-            if self.timer2 > 0.4:
+            if self.timer2 > self.trainingInterval:
                 print self.timer2
-                #self.pidTuner()
+                self.pidTuner()
                 self.timer2 = 0
 	else:
 	    print "Optimization finished"
@@ -291,7 +291,7 @@ class AiController():
 	
 	tuneRates = [1.2,1.1,1.05,1.01]
 	fixGroup=['sensorfusion6.ki',"imu_acc_lpf.factor","sensorfusion6.kp",'pid_rate.yaw_kp', 'pid_rate.yaw_kd', 'pid_rate.yaw_ki','pid_attitude.pitch_kp']
-	changeGroup=['pid_attitude.pitch_ki']
+	changeGroup=['pid_attitude.roll_kp','pid_rate.roll_kp']
         for k in self.cfParams:
             if k in changeGroup:
                 key = k
