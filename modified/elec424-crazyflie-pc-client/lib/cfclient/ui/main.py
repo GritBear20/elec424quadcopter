@@ -92,7 +92,8 @@ class MainUI(QtGui.QMainWindow, main_window_class):
 
     _input_device_error_signal = pyqtSignal(str)
     _input_discovery_signal = pyqtSignal(object)
-
+    linkToAiController = 0
+    
     def __init__(self, *args):
         super(MainUI, self).__init__(*args)
         self.setupUi(self)
@@ -198,6 +199,14 @@ class MainUI(QtGui.QMainWindow, main_window_class):
         self.menuItemBootloader.triggered.connect(self._bootloader_dialog.show)
         self._about_dialog = AboutDialog(cfclient.ui.pluginhelper)
         self.menuItemAbout.triggered.connect(self._about_dialog.show)
+
+
+
+
+        # Adc to aicontroller
+        self.linkToAiController = self.joystickReader.inputdevice;
+        
+        
         # Loading toolboxes (A bit of magic for a lot of automatic)
         self.toolboxes = []
         self.toolboxesMenuItem.setMenu(QtGui.QMenu())
@@ -512,6 +521,6 @@ class MainUI(QtGui.QMainWindow, main_window_class):
             print("adc Values not found in log TOC")
         
     def log_adc_data(self,data):
-        print "yadayada"
-        logging.info("AdcValue:bottom : %f,  front: %f" % (data["adc.proximBottomRaw"],data["adc.proximFrontRaw"]))
-        
+        #print "yadayada"
+        #logging.info("AdcValue:bottom : %f,  front: %f" % (data["adc.proximBottomRaw"],data["adc.proximFrontRaw"]))
+        self.linkToAiController.setHeight(data["adc.proximBottomRaw"])

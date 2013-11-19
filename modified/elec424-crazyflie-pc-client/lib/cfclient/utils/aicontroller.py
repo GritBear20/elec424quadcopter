@@ -79,20 +79,21 @@ class AiController():
 	self.error = 0
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 1
+	self.minLandingThrust = 0.7
 	self.trainingInterval = 0.4
         self.lastTrained = 0.0
         self.timer2 = 0
-        self.yawDelta = 2
+        self.yawDelta = 0.001
+	self.height = 0
 	
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 1
+        self.maxThrust = 0.8
         # Determines how fast to take off
         self.thrustInc = 0.01
-        self.takeoffTime = 1.5
+        self.takeoffTime = 0.5
         # Determines how fast to land
         self.thrustDec = -0.01
         self.hoverTime = 15
@@ -203,6 +204,9 @@ class AiController():
 	self.actualData['Pitch'] = float(pitch)
 	self.actualData['Yaw'] = float(yaw)
 
+    def setHeight(self,height):
+        self.height = height
+
     def augmentInputWithAi(self):
         """
         Overrides the throttle input with a controlled takeoff, hover, and land loop.
@@ -220,12 +224,20 @@ class AiController():
         self.timer2 = self.timer2 + timeSinceLastAi
         self.lastTime = currentTime
         self.updateError()
+        if self.timer2 > 0.005:
+            #print "miramira"
+            self.timer2 = 0
+            self.addYaw(self.yawDelta)
+
+            
         if not(self.checkOptimizationFinished()):
-            if self.timer2 > 0.4:
+            if self.timer2 > 1:
+                #print "miramira"
                 #print self.timer2
                 #self.pidTuner()
-                self.timer2 = 0
-                self.addYaw(self.yawDelta)
+                #self.timer2 = 0
+                #self.addYaw(self.yawDelta)
+                pass
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
@@ -242,8 +254,7 @@ class AiController():
 	    
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
-            thrustDelta = 0
-	    
+            thrustDelta = self.adjustThrust(self.height,36)
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -289,7 +300,9 @@ class AiController():
         self.data["thrust"] = self.aiData["thrust"]
 
     def addYaw(self,yawDelta):
-        self.aiData["yaw"] =self.aiData["yaw"]+yawDelta
+        self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
+        if (self.aiData["yaw"] > 0.72):
+            self.aiData["yaw"] = self.aiData["yaw"] - 1.44
         
         
     # ELEC424 TODO: Implement this function
@@ -400,3 +413,10 @@ class AiController():
             dev.append({"id":i, "name" : j.get_name()})
         return dev
 
+    def adjustThrust(self, sensorHeight, targetHeight):
+	diff = sensorHeight - targetHeight
+	print diff
+        if(diff >0):
+	    return -0.005
+	else:
+	    return 0.005

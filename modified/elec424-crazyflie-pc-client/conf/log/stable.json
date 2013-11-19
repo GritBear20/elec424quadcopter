@@ -23,8 +23,8 @@
         }
       ], 
       "min": -180, 
-      "name": "Stabilizer", 
-      "period": 20
+      "name": "stable", 
+      "period": 10
     }
   }
 }
