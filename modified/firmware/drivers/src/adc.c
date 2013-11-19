@@ -47,8 +47,9 @@
 
 // PORT A
 #define GPIO_VBAT        GPIO_Pin_3
-#define GPIO_PROX_FRONT	 GPIO_Pin_6
-#define GPIO_PROX_BOTTOM	 GPIO_Pin_7
+
+#define GPIO_PROX_FRONT	 GPIO_Pin_7
+#define GPIO_PROX_BOTTOM	 GPIO_Pin_6
 
 // CHANNELS
 #define NBR_OF_ADC_CHANNELS   3
@@ -57,8 +58,8 @@
 #define CH_VREF               ADC_Channel_17
 #define CH_TEMP               ADC_Channel_16
 
-#define CH_PROX_FRONT              ADC_Channel_6
-#define CH_PROX_BOTTOM             ADC_Channel_7
+#define CH_PROX_FRONT              ADC_Channel_7
+#define CH_PROX_BOTTOM             ADC_Channel_6
 
 static bool isInit;
 volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
@@ -193,7 +194,7 @@ void adcInit(void)
 
 //========================================
   // ADC1 channel sequence
-  ADC_RegularChannelConfig(ADC1, CH_VREF, 1, ADC_SampleTime_28Cycles5);
+  ADC_RegularChannelConfig(ADC1, CH_VREF, 1, ADC_SampleTime_13Cycles5);
   ADC_RegularChannelConfig(ADC1, CH_VREF, 2, ADC_SampleTime_13Cycles5);
   ADC_RegularChannelConfig(ADC1, CH_VREF, 3, ADC_SampleTime_13Cycles5);
   
@@ -209,7 +210,7 @@ void adcInit(void)
 
 //==================================
   // ADC2 channel sequence
-  ADC_RegularChannelConfig(ADC2, CH_VBAT, 1, ADC_SampleTime_28Cycles5);
+  ADC_RegularChannelConfig(ADC2, CH_VBAT, 1, ADC_SampleTime_13Cycles5);
   ADC_RegularChannelConfig(ADC2, CH_PROX_FRONT, 2, ADC_SampleTime_13Cycles5);
   ADC_RegularChannelConfig(ADC2, CH_PROX_BOTTOM, 3, ADC_SampleTime_13Cycles5);
 
@@ -319,8 +320,8 @@ void adcTask(void *param)
 
 void proxSensorUpdate(AdcGroup* adcValues)
 {
-    proximFrontRaw = adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref);
-    proximBottomRaw = adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref);
+    proximFrontRaw = adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) * 193.91;
+    proximBottomRaw = adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) * 193.91;
 
     //proximFront = (proximFrontRaw / PROX_CON);    
     //proximBottom = (proximBottomRaw / PROX_CON);
