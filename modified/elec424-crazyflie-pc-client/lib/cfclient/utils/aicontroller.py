@@ -82,7 +82,7 @@ class AiController():
 	self.trainingInterval = 0.4
         self.lastTrained = 0.0
         self.timer2 = 0
-	
+        self.yawDelta = 2
 	
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
@@ -144,7 +144,23 @@ class AiController():
 	    if self.cfParamsFlag[k] != 3:
 		return False
 	return True
-	    
+
+    def initAdcLog(self):
+        adc_log_conf = LogConfig("Adc", 10)
+        adc_log_conf.addVariable(LogVariable("adc.x", "int16"))
+        adc_log_conf.addVariable(LogVariable("acc.y", "int16"))
+        adc_log_conf.addVariable(LogVariable("acc.z", "int16"))
+        self.adc_log = self.crazyflie.log.create_log_packet(adc_log_conf)
+        if self.adc_log is not None:
+            self.adc_log.data_received.add_callback(self.log_adc_data)
+            self.adc_log.start()
+        else:
+            print("acc.x/y/z not found in log TOC")
+        
+    def log_adc_data(self,data):
+        logging.info("AdcValue:")
+        print "yadayada"
+        
     def readInput(self):
         """Read input from the selected device."""
 
@@ -220,9 +236,10 @@ class AiController():
         self.updateError()
         if not(self.checkOptimizationFinished()):
             if self.timer2 > 0.4:
-                print self.timer2
+                #print self.timer2
                 #self.pidTuner()
                 self.timer2 = 0
+                self.addYaw(self.yawDelta)
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
@@ -260,12 +277,13 @@ class AiController():
 
         self.addThrust( thrustDelta )
 
+ 
 
         # override Other inputs as needed
         # --------------------------------------------------------------
         # self.data["roll"] = self.aiData["roll"]
         # self.data["pitch"] = self.aiData["pitch"]
-        # self.data["yaw"] = self.aiData["yaw"]
+        self.data["yaw"] = self.aiData["yaw"]
         # self.data["pitchcal"] = self.aiData["pitchcal"]
         # self.data["rollcal"] = self.aiData["rollcal"]
         # self.data["estop"] = self.aiData["estop"]
@@ -284,7 +302,10 @@ class AiController():
         # overwrite joystick thrust values
         self.data["thrust"] = self.aiData["thrust"]
 
-
+    def addYaw(self,yawDelta):
+        self.aiData["yaw"] =self.aiData["yaw"]+yawDelta
+        
+        
     # ELEC424 TODO: Implement this function
     def pidTuner(self):
 	key = ''
