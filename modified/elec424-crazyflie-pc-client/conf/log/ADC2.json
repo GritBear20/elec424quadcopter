@@ -47,7 +47,7 @@
         }
       ], 
       "min": -180, 
-      "name": "ADC", 
+      "name": "ADC2", 
       "period": 10
     }
   }

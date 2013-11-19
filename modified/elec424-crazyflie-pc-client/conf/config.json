@@ -11,7 +11,7 @@
   "max_yaw": 200, 
   "flightmode": "Advanced", 
   "max_rp": 30, 
-  "open_tabs": "Flight Control,Log TOC,Parameters,Plotter", 
+  "open_tabs": "Flight Control,Log TOC,Parameters", 
   "trim_pitch": 0.0, 
   "slew_limit": 45, 
   "trim_roll": 0.0, 
