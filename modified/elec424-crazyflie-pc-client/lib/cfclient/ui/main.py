@@ -502,8 +502,8 @@ class MainUI(QtGui.QMainWindow, main_window_class):
 
     def connectSetupFinished(self, linkURI):
         adc_log_conf = LogConfig("Adc", 10)
-        adc_log_conf.addVariable(LogVariable("acc.x","float"))
-        adc_log_conf.addVariable(LogVariable("acc.y","float"))
+        adc_log_conf.addVariable(LogVariable("adc.proximBottomRaw","float"))
+        adc_log_conf.addVariable(LogVariable("adc.proximFrontRaw","float"))
         self.adc_log = self.cf.log.create_log_packet(adc_log_conf)
         if self.adc_log is not None:
             self.adc_log.dataReceived.add_callback(self.log_adc_data)
@@ -513,5 +513,5 @@ class MainUI(QtGui.QMainWindow, main_window_class):
         
     def log_adc_data(self,data):
         print "yadayada"
-        logging.info("AdcValue:front : %d, bottom %d" % (data["acc.x"],data["acc.y"]))
+        logging.info("AdcValue:bottom : %f,  front: %f" % (data["adc.proximBottomRaw"],data["adc.proximFrontRaw"]))
         
