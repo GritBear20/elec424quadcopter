@@ -47,8 +47,8 @@
 
 // PORT A
 #define GPIO_VBAT        GPIO_Pin_3
-#define GPIO_PROX_FRONT	 GPIO_Pin_4
-#define GPIO_PROX_BOTTOM	 GPIO_Pin_5
+#define GPIO_PROX_FRONT	 GPIO_Pin_7
+#define GPIO_PROX_BOTTOM	 GPIO_Pin_6
 
 // CHANNELS
 #define NBR_OF_ADC_CHANNELS   3
@@ -57,8 +57,8 @@
 #define CH_VREF               ADC_Channel_17
 #define CH_TEMP               ADC_Channel_16
 
-#define CH_PROX_FRONT              ADC_Channel_4
-#define CH_PROX_BOTTOM             ADC_Channel_5
+#define CH_PROX_FRONT              ADC_Channel_7
+#define CH_PROX_BOTTOM             ADC_Channel_6
 
 static bool isInit;
 volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
