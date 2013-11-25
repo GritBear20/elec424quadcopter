@@ -83,38 +83,44 @@ class AiController():
 
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 0.7
+	self.minLandingThrust = 0.68
 	self.minControlThrust = 0.8
 	self.trainingInterval = 0.3
         self.lastTrained = 0.0
         self.timer2 = 0
 	self.timer3 = 0
+	self.timerError = 0
+	self.timerWrite = 0
+	self.rollList = []
+	self.pitchList = []
         self.yawDelta = 0.001
 	self.height = 0
 	self.alreadySet = False
 	self.previousHeight = 0	
 	self.f = open('errorData.txt', 'w')
+	self.froll = open('errorDataRoll.txt', 'w')
+	self.fpitch = open('errorDataPitch.txt', 'w')
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.8
+        self.maxThrust = 0.80
         # Determines how fast to take off
-        self.thrustInc = 0.01
-        self.takeoffTime = 0.5
+        self.thrustInc = 0.02
+        self.takeoffTime = 0.45
         # Determines how fast to land
         self.thrustDec = -0.01
         self.hoverTime = 2
         # Sets the delay between test flights
-        self.repeatDelay = 4
+        self.repeatDelay = 2
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
-            'pid_rate.pitch_kp': 70.0,
+            'pid_rate.pitch_kp': 400.0,
             'pid_rate.pitch_kd': 0.0,
             'pid_rate.pitch_ki': 0.0,
-            'pid_rate.roll_kp': 70.0,
+            'pid_rate.roll_kp': 400.0,
             'pid_rate.roll_kd': 0.0,
             'pid_rate.roll_ki': 0.0,
             'pid_rate.yaw_kp': 50.0,
@@ -230,8 +236,11 @@ class AiController():
         self.timer1 = self.timer1 + timeSinceLastAi
         self.timer2 = self.timer2 + timeSinceLastAi
 	self.timer3 = self.timer3 + timeSinceLastAi
+	self.timerError = self.timerError + timeSinceLastAi
+	self.timerWrite = self.timerWrite + timeSinceLastAi
         self.lastTime = currentTime
         self.updateError()
+
 	if not self.alreadySet:
 	    self.alreadySet = True
 	    for key in self.cfParams:
@@ -270,10 +279,11 @@ class AiController():
                 #self.addYaw(self.yawDelta)
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
-	    if self.aiData["thrust"] <= self.minLandingThrust:
-		thrustDelta = 0
-	    else:
-		thrustDelta = self.thrustDec
+	    #if self.aiData["thrust"] <= self.minLandingThrust:
+		#thrustDelta = 0
+	    #else:
+		#thrustDelta = self.thrustDec
+	    thrustDelta = self.thrustDec
 
         # repeat
         else:
@@ -282,7 +292,27 @@ class AiController():
 
         self.addThrust( thrustDelta )
 
- 
+ 	if self.timerError > 0.1:
+	    self.rollList.append(self.actualData["Roll"])
+	    self.pitchList.append(self.actualData["Pitch"])
+	    self.timerError = 0
+	
+	if self.timerWrite > 0.5:
+	    self.timerWrite = 0
+	    string = ','.join(str(e) for e in self.rollList)
+	    string2 = ','.join(str(e) for e in self.pitchList)
+	    self.f.write(string)
+	    self.f.write("\n")
+	    self.f.write(string2)
+	    self.f.write("\n")
+	
+	    '''curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
+	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["Roll"])) + "\n"
+	    self.f.write(self.outputStr)
+	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["Roll"])) + "\n"
+	    self.f.write(self.outputStr)'''
+
+            
 
         # override Other inputs as needed
         # --------------------------------------------------------------
@@ -306,6 +336,8 @@ class AiController():
         
         # overwrite joystick thrust values
         self.data["thrust"] = self.aiData["thrust"]
+	self.data["pitch"] = 0
+	self.data["roll"] = 0
 
     def addYaw(self,yawDelta):
         self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
@@ -368,10 +400,10 @@ class AiController():
     
     #update using the goodness function
     def updateError(self):
- 	currentTime = time.time()
-	curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
-	self.outputStr = str(currentTime) + ";" + str(curError) + "\n"
-	self.f.write(self.outputStr)
+ 	#currentTime = time.time()
+	#curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
+	#self.outputStr = str(currentTime) + ";" + str(curError) + "\n"
+	#self.f.write(self.outputStr)
 	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"]) * 0.0
 	
 
