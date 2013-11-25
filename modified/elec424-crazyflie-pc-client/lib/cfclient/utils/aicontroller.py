@@ -72,11 +72,15 @@ class AiController():
         self.cf = cf
         self.inputMap = None
         pygame.init()
-
+	self.outputStr = "";
         # AI variables
         self.timer1 = 0
         self.lastTime = 0
 	self.error = 0
+	
+	self.pitchError = 0;
+	self.rollError = 0;
+
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
 	self.minLandingThrust = 0.7
@@ -89,44 +93,44 @@ class AiController():
 	self.height = 0
 	self.alreadySet = False
 	self.previousHeight = 0	
-
+	self.f = open('errorData.txt', 'w')
 	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 1
+        self.maxThrust = 0.8
         # Determines how fast to take off
-        self.thrustInc = 0.04
+        self.thrustInc = 0.01
         self.takeoffTime = 0.5
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 12
+        self.hoverTime = 2
         # Sets the delay between test flights
-        self.repeatDelay = 0
+        self.repeatDelay = 4
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
-            'pid_rate.pitch_kp': 124, 
-            'pid_rate.pitch_kd': 0.1452, 
-            'pid_rate.pitch_ki': 0.121, 
-            'pid_rate.roll_kp': 139, 
-            'pid_rate.roll_kd': 0.0865800865801, 
-            'pid_rate.roll_ki': 0.0869740796394, 
-            'pid_rate.yaw_kp': 47.4545454545, 
-            'pid_rate.yaw_kd': 0.0, 
-            'pid_rate.yaw_ki': 25.0, 
-            'pid_attitude.pitch_kp': 3.90418554256, 
-            'pid_attitude.pitch_kd': 0.0, 
-            'pid_attitude.pitch_ki': 2.3, 
-            'pid_attitude.roll_kp': 5.6405675, 
-            'pid_attitude.roll_kd': 0.0, 
-            'pid_attitude.roll_ki': 1.5026296018, 
-            'pid_attitude.yaw_kp': 0.0, 
-            'pid_attitude.yaw_kd': 0.0, 
-            'pid_attitude.yaw_ki': 0.0, 
-            'sensorfusion6.kp': 0.800000011921, 
-            'sensorfusion6.ki': 0.00200000009499, 
+            'pid_rate.pitch_kp': 70.0,
+            'pid_rate.pitch_kd': 0.0,
+            'pid_rate.pitch_ki': 0.0,
+            'pid_rate.roll_kp': 70.0,
+            'pid_rate.roll_kd': 0.0,
+            'pid_rate.roll_ki': 0.0,
+            'pid_rate.yaw_kp': 50.0,
+            'pid_rate.yaw_kd': 0.0,
+            'pid_rate.yaw_ki': 25.0,
+            'pid_attitude.pitch_kp': 3.5,
+            'pid_attitude.pitch_kd': 0.0,
+            'pid_attitude.pitch_ki': 2.0,
+            'pid_attitude.roll_kp': 3.5,
+            'pid_attitude.roll_kd': 0.0,
+            'pid_attitude.roll_ki': 2.0,
+            'pid_attitude.yaw_kp': 0.0,
+            'pid_attitude.yaw_kd': 0.0,
+            'pid_attitude.yaw_ki': 0.0,
+            'sensorfusion6.kp': 0.800000011921,
+            'sensorfusion6.ki': 0.00200000009499,
             'imu_acc_lpf.factor': 32 }
 	
 	self.cfParamsFlag = copy.deepcopy(self.cfParams)
@@ -135,10 +139,9 @@ class AiController():
 	self.previousError = 100
 	self.ultimateGain = 0
 	self.oscillationPeriod = 0
-
 	
 	self.initFlag()
-
+	
     
     #initialize the optimization flags
     def initFlag(self):
@@ -250,10 +253,6 @@ class AiController():
         # Basic AutoPilot steadly increase thrust, hover, land and repeat
         # -------------------------------------------------------------
         # delay before takeoff
-	if self.timer3 > 0.005:
-                #print "miramira"
-                self.timer3 = 0
-                self.addYaw(self.yawDelta)
  
         if self.timer1 < 0:
             thrustDelta = 0
@@ -263,8 +262,12 @@ class AiController():
 	    
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
-            thrustDelta = self.adjustThrust(self.height,40)
-	    
+	    thrustDelta = 0;
+            #thrustDelta = self.adjustThrust(self.height,40)
+	    if self.timer3 > 0.005:
+                #print "miramira"
+                self.timer3 = 0
+                #self.addYaw(self.yawDelta)
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -317,7 +320,7 @@ class AiController():
 	
 	tuneRates = [1.2,1.1,1.05,1.01]
 	fixGroup=['sensorfusion6.ki',"imu_acc_lpf.factor","sensorfusion6.kp",'pid_rate.yaw_kp', 'pid_rate.yaw_kd', 'pid_rate.yaw_ki','pid_attitude.pitch_kp']
-	changeGroup=['pid_attitude.pitch_kd']
+	changeGroup=['pid_rate.pitch_kp']
         for k in self.cfParams:
             if k in changeGroup:
                 key = k
@@ -355,8 +358,8 @@ class AiController():
 
         self.error = 0
 	print str(key) + ":" + str(self.minError) + ":" + str(self.cfParams[key])
+	self.updateCrazyFlieParam(key)
 	
-
     def zieglerTuning(self):
         for param in cfParams:
             if "kp" in param:
@@ -365,8 +368,12 @@ class AiController():
     
     #update using the goodness function
     def updateError(self):
+ 	currentTime = time.time()
+	curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
+	self.outputStr = str(currentTime) + ";" + str(curError) + "\n"
+	self.f.write(self.outputStr)
 	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"]) * 0.0
-
+	
 
     # update via param.py -> radiodriver.py -> crazyradio.py -> usbRadio )))
     def updateCrazyFlieParam(self, completename ):
