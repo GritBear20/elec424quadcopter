@@ -78,13 +78,15 @@ class AiController():
         self.lastTime = 0
 	self.error = 0
 	
-	self.pitchError = 0;
-	self.rollError = 0;
+	self.pitchError = 0
+	self.rollError = 0
+
+	self.heighErrorIntegral = 0
 
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
 	self.minLandingThrust = 0.68
-	self.minControlThrust = 0.8
+	self.minControlThrust = 0.70
 	self.trainingInterval = 0.3
         self.lastTrained = 0.0
         self.timer2 = 0
@@ -106,11 +108,11 @@ class AiController():
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
         self.maxThrust = 0.80
         # Determines how fast to take off
-        self.thrustInc = 0.02
-        self.takeoffTime = 0.45
+        self.thrustInc = 0.025
+        self.takeoffTime = 0.3
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 2
+        self.hoverTime = 5
         # Sets the delay between test flights
         self.repeatDelay = 2
 
@@ -128,10 +130,10 @@ class AiController():
             'pid_rate.yaw_ki': 25.0,
             'pid_attitude.pitch_kp': 3.5,
             'pid_attitude.pitch_kd': 0.0,
-            'pid_attitude.pitch_ki': 2.0,
+            'pid_attitude.pitch_ki': 2,
             'pid_attitude.roll_kp': 3.5,
             'pid_attitude.roll_kd': 0.0,
-            'pid_attitude.roll_ki': 2.0,
+            'pid_attitude.roll_ki': 2,
             'pid_attitude.yaw_kp': 0.0,
             'pid_attitude.yaw_kd': 0.0,
             'pid_attitude.yaw_ki': 0.0,
@@ -252,12 +254,14 @@ class AiController():
                 #print self.timer2
                 #self.pidTuner()
                 #self.timer2 = 0
-                #self.addYaw(self.yawDelta)
+                
                 pass
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
+        #self.addYaw(self.yawDelta)
 
+	self.aiData["yaw"] = 1
         
         # Basic AutoPilot steadly increase thrust, hover, land and repeat
         # -------------------------------------------------------------
@@ -265,6 +269,7 @@ class AiController():
  
         if self.timer1 < 0:
             thrustDelta = 0
+            
         # takeoff
         elif self.timer1 < self.takeoffTime :
             thrustDelta = self.thrustInc
@@ -272,19 +277,18 @@ class AiController():
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
 	    thrustDelta = 0;
-            #thrustDelta = self.adjustThrust(self.height,40)
+            thrustDelta = self.adjustThrust(self.height,32)
 	    if self.timer3 > 0.005:
                 #print "miramira"
                 self.timer3 = 0
                 #self.addYaw(self.yawDelta)
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
-	    #if self.aiData["thrust"] <= self.minLandingThrust:
-		#thrustDelta = 0
-	    #else:
-		#thrustDelta = self.thrustDec
-	    thrustDelta = self.thrustDec
-
+	    if self.aiData["thrust"] <= self.minLandingThrust:
+		thrustDelta = 0
+	    else:
+		thrustDelta = self.thrustDec
+	 
         # repeat
         else:
             self.timer1 = -self.repeatDelay
@@ -296,15 +300,17 @@ class AiController():
 	    self.rollList.append(self.actualData["Roll"])
 	    self.pitchList.append(self.actualData["Pitch"])
 	    self.timerError = 0
+	    
 	
 	if self.timerWrite > 0.5:
+            
 	    self.timerWrite = 0
 	    string = ','.join(str(e) for e in self.rollList)
 	    string2 = ','.join(str(e) for e in self.pitchList)
 	    self.f.write(string)
-	    self.f.write("\n")
+	    self.f.write("\n next \n")
 	    self.f.write(string2)
-	    self.f.write("\n")
+	    self.f.write("\n\n End\n\n")
 	
 	    '''curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
 	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["Roll"])) + "\n"
@@ -459,27 +465,21 @@ class AiController():
         return dev
 
     def adjustThrust(self, sensorHeight, targetHeight):
+        kp = 0.001
+        ki = 0.000000
+        kd = -0.0003
+        
+        
 	diff = sensorHeight - targetHeight
+        self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight
+	
 	print diff
-	thrustDelta = 0
 	self.previousHeight = sensorHeight
-        if(diff >0):
-	    if(heightDiv > -0.5):
-	        thrustDelta = -0.03
-	    else:
-		thrustDelta = 0
-	else:
-	    if(heightDiv > 0.5):
-	        thrustDelta = 0
-	    else:
-		thrustDelta = 0.05
-	if diff > 12:
-	    self.maxThrust = 0.88
-	else :
-	    self.maxThrust = 1
+	thrustDelta = -(diff * kp + ki * self.heighErrorIntegral + kd*heightDiv)
 	
 	if(self.aiData["thrust"] < self.minControlThrust):
-	    thrustDelta = 0.01
+	    self.aiData["thrust"] = self.minControlThrust
 	print self.aiData["thrust"]
+	print self.data["thrust"]
 	return thrustDelta

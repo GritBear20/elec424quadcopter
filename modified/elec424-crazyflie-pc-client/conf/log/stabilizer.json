@@ -6,25 +6,19 @@
         {
           "stored_as": "float", 
           "type": "TOC", 
-          "name": "stabilizer.pitch", 
+          "name": "adc.vproxBottom", 
           "fetch_as": "float"
         }, 
         {
           "stored_as": "float", 
           "type": "TOC", 
-          "name": "stabilizer.roll", 
-          "fetch_as": "float"
-        }, 
-        {
-          "stored_as": "float", 
-          "type": "TOC", 
-          "name": "stabilizer.yaw", 
+          "name": "adc.vproxFront", 
           "fetch_as": "float"
         }
       ], 
       "min": -180, 
       "name": "Stabilizer", 
-      "period": 20
+      "period": 10
     }
   }
 }
