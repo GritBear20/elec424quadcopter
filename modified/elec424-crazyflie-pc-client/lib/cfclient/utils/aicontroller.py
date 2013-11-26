@@ -53,7 +53,7 @@ You will also likely have to open the tools->parameters tab in the PC-Client whi
 
 """
 
-__author__ = 'Steven Arroyo and Lee Mira'
+__author__ = ' Lee and Mira <3'
 __all__ = ['AiController']
 
 import pygame
@@ -85,8 +85,8 @@ class AiController():
 
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
-	self.minLandingThrust = 0.68
-	self.minControlThrust = 0.70
+	self.minLandingThrust = 0.60
+	self.minControlThrust = 0.65
 	self.trainingInterval = 0.3
         self.lastTrained = 0.0
         self.timer2 = 0
@@ -95,7 +95,7 @@ class AiController():
 	self.timerWrite = 0
 	self.rollList = []
 	self.pitchList = []
-        self.yawDelta = 0.001
+        self.yawDelta = 0.25
 	self.height = 0
 	self.alreadySet = False
 	self.previousHeight = 0	
@@ -106,23 +106,23 @@ class AiController():
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.80
+        self.maxThrust = 0.85
         # Determines how fast to take off
-        self.thrustInc = 0.025
-        self.takeoffTime = 0.3
+        self.thrustInc = 0.007
+        self.takeoffTime = 0.6
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 5
+        self.hoverTime = 20
         # Sets the delay between test flights
         self.repeatDelay = 2
 
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
-            'pid_rate.pitch_kp': 400.0,
+            'pid_rate.pitch_kp': 600.0,
             'pid_rate.pitch_kd': 0.0,
             'pid_rate.pitch_ki': 0.0,
-            'pid_rate.roll_kp': 400.0,
+            'pid_rate.roll_kp': 600.0,
             'pid_rate.roll_kd': 0.0,
             'pid_rate.roll_ki': 0.0,
             'pid_rate.yaw_kp': 50.0,
@@ -259,9 +259,9 @@ class AiController():
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
-        #self.addYaw(self.yawDelta)
+        self.addYaw(self.yawDelta)
 
-	self.aiData["yaw"] = 1
+	#self.aiData["yaw"] = 1
         
         # Basic AutoPilot steadly increase thrust, hover, land and repeat
         # -------------------------------------------------------------
@@ -277,7 +277,7 @@ class AiController():
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
 	    thrustDelta = 0;
-            thrustDelta = self.adjustThrust(self.height,32)
+            thrustDelta = self.adjustThrust(self.height,42)
 	    if self.timer3 > 0.005:
                 #print "miramira"
                 self.timer3 = 0
@@ -300,6 +300,7 @@ class AiController():
 	    self.rollList.append(self.actualData["Roll"])
 	    self.pitchList.append(self.actualData["Pitch"])
 	    self.timerError = 0
+	    print self.actualData["Yaw"]
 	    
 	
 	if self.timerWrite > 0.5:
@@ -342,14 +343,15 @@ class AiController():
         
         # overwrite joystick thrust values
         self.data["thrust"] = self.aiData["thrust"]
-	self.data["pitch"] = 0
-	self.data["roll"] = 0
+	#self.data["pitch"] = 0
+	#self.data["roll"] = 0
 
     def addYaw(self,yawDelta):
-        self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
+	aiTarget = self.actualData["Yaw"]/180*0.72
+        self.aiData["yaw"] = aiTarget + self.yawDelta
         if (self.aiData["yaw"] > 0.72):
             self.aiData["yaw"] = self.aiData["yaw"] - 1.44
-	self.aiData["yaw"] = 1
+	 
         
         
     # ELEC424 TODO: Implement this function
@@ -465,21 +467,21 @@ class AiController():
         return dev
 
     def adjustThrust(self, sensorHeight, targetHeight):
-        kp = 0.001
-        ki = 0.000000
-        kd = -0.0003
-        
+        kp = 0.1
+        ki = 0.0000
+        kd = 5        
         
 	diff = sensorHeight - targetHeight
         self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight
 	
-	print diff
+	#print diff
 	self.previousHeight = sensorHeight
 	thrustDelta = -(diff * kp + ki * self.heighErrorIntegral + kd*heightDiv)
 	
 	if(self.aiData["thrust"] < self.minControlThrust):
 	    self.aiData["thrust"] = self.minControlThrust
-	print self.aiData["thrust"]
-	print self.data["thrust"]
+	    thrustDelta = 0
+	#print self.aiData["thrust"]
+	#print self.data["thrust"]
 	return thrustDelta
