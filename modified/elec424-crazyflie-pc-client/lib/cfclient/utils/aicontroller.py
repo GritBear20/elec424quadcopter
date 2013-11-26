@@ -106,9 +106,9 @@ class AiController():
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.85
+        self.maxThrust = 0.9
         # Determines how fast to take off
-        self.thrustInc = 0.007
+        self.thrustInc = 0.001
         self.takeoffTime = 0.6
         # Determines how fast to land
         self.thrustDec = -0.01
@@ -121,14 +121,14 @@ class AiController():
         self.cfParams = {
             'pid_rate.pitch_kp': 600.0,
             'pid_rate.pitch_kd': 0.0,
-            'pid_rate.pitch_ki': 0.0,
-            'pid_rate.roll_kp': 600.0,
+            'pid_rate.pitch_ki': 1.5,
+            'pid_rate.roll_kp': 400.0,
             'pid_rate.roll_kd': 0.0,
-            'pid_rate.roll_ki': 0.0,
-            'pid_rate.yaw_kp': 50.0,
+            'pid_rate.roll_ki': 0.5,
+            'pid_rate.yaw_kp': 40.0,
             'pid_rate.yaw_kd': 0.0,
             'pid_rate.yaw_ki': 25.0,
-            'pid_attitude.pitch_kp': 3.5,
+            'pid_attitude.pitch_kp': 4.0,
             'pid_attitude.pitch_kd': 0.0,
             'pid_attitude.pitch_ki': 2,
             'pid_attitude.roll_kp': 3.5,
@@ -259,7 +259,6 @@ class AiController():
 	else:
 	    print "Optimization finished"
 	    self.initFlag()
-        self.addYaw(self.yawDelta)
 
 	#self.aiData["yaw"] = 1
         
@@ -278,10 +277,10 @@ class AiController():
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
 	    thrustDelta = 0;
             thrustDelta = self.adjustThrust(self.height,42)
-	    if self.timer3 > 0.005:
+	    if self.timer3 > 0.15:
                 #print "miramira"
                 self.timer3 = 0
-                #self.addYaw(self.yawDelta)
+                self.addYaw(self.yawDelta)
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -347,8 +346,7 @@ class AiController():
 	#self.data["roll"] = 0
 
     def addYaw(self,yawDelta):
-	aiTarget = self.actualData["Yaw"]/180*0.72
-        self.aiData["yaw"] = aiTarget + self.yawDelta
+        self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
         if (self.aiData["yaw"] > 0.72):
             self.aiData["yaw"] = self.aiData["yaw"] - 1.44
 	 
