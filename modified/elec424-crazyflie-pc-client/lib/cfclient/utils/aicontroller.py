@@ -96,7 +96,7 @@ class AiController():
 	self.rollList = []
 	self.pitchList = []
         self.yawDelta = 0.25
-	self.height = 0
+	self.height = 5
 	self.alreadySet = False
 	self.previousHeight = 0	
 	self.f = open('errorData.txt', 'w')
@@ -300,6 +300,7 @@ class AiController():
 	    self.pitchList.append(self.actualData["Pitch"])
 	    self.timerError = 0
 	    print self.actualData["Yaw"]
+	    print self.height
 	    
 	
 	if self.timerWrite > 0.5:
@@ -467,8 +468,9 @@ class AiController():
     def adjustThrust(self, sensorHeight, targetHeight):
         kp = 0.1
         ki = 0.0000
-        kd = 5        
-        
+        kd = 5
+        print "height"
+        print sensorHeight
 	diff = sensorHeight - targetHeight
         self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight

@@ -6,7 +6,7 @@
   "slew_rate": 30, 
   "client_side_xmode": false, 
   "auto_reconnect": false, 
-  "input_device": "BDA Pro Ex", 
+  "input_device": "Pro Ex", 
   "link_uri": "radio://0/21/250K", 
   "max_yaw": 200, 
   "flightmode": "Advanced", 
@@ -15,6 +15,6 @@
   "trim_pitch": 0.0, 
   "slew_limit": 45, 
   "trim_roll": 0.0, 
-  "max_thrust": 99.0, 
+  "max_thrust": 0.0, 
   "min_thrust": 25.0
 }
