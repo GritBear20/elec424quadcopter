@@ -64,26 +64,26 @@ static bool isInit;
 volatile AdcGroup adcValues[ADC_MEAN_SIZE * 2];
 
 // The proximity in inches from the sensor face
-static uint32_t proximFront;
-static uint32_t proximBottom;
+//static uint32_t proximFront;
+//static uint32_t proximBottom;
 
-static float proximFrontFloat;
-static float proximBottomFloat;
+//static float proximFrontFloat;
+//static float proximBottomFloat;
 
-static uint16_t proximFrontRaw;
-static uint16_t proximBottomRaw;
+static float proximFrontRaw;
+static float proximBottomRaw;
 
 static uint16_t proximRef;
 
 xQueueHandle      adcQueue;
 
 LOG_GROUP_START(adc)
-LOG_ADD(LOG_INT32, vproxFront, &proximFront)
-LOG_ADD(LOG_INT32, vproxBottom, &proximBottom)
-LOG_ADD(LOG_FLOAT, vproxFrontFloat, &proximFrontFloat)
-LOG_ADD(LOG_FLOAT, vproxBottomFloat, &proximBottomFloat)
-LOG_ADD(LOG_INT16, proximFrontRaw, &proximFrontRaw)
-LOG_ADD(LOG_INT16, proximBottomRaw, &proximBottomRaw)
+//LOG_ADD(LOG_INT32, vproxFront, &proximFront)
+//LOG_ADD(LOG_INT32, vproxBottom, &proximBottom)
+//LOG_ADD(LOG_FLOAT, vproxFrontFloat, &proximFrontFloat)
+//LOG_ADD(LOG_FLOAT, vproxBottomFloat, &proximBottomFloat)
+LOG_ADD(LOG_FLOAT, proximFrontRaw, &proximFrontRaw)
+LOG_ADD(LOG_FLOAT, proximBottomRaw, &proximBottomRaw)
 LOG_ADD(LOG_INT16, proximRef, &proximRef)
 LOG_GROUP_STOP(adc)
 
@@ -331,11 +331,11 @@ void proxSensorUpdate(AdcGroup* adcValues)
 
     proximRef = adcValues->vproxFront.vref;
 
-    proximFrontFloat = (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) );    
-    proximBottomFloat = (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) );
+    proximFrontRaw = (adcConvertToVoltageFloat(adcValues->vproxFront.val, adcValues->vproxFront.vref) * 293);    
+    proximBottomRaw = (adcConvertToVoltageFloat(adcValues->vproxBottom.val, adcValues->vproxBottom.vref) * 293);
 
-    proximFront = (uint32_t) (proximFrontFloat/ PROX_CON);    
-    proximBottom = (uint32_t) (proximBottomFloat/ PROX_CON);
+    //proximFront = (uint32_t) (proximFrontFloat/ PROX_CON);    
+    //proximBottom = (uint32_t) (proximBottomFloat/ PROX_CON);
 }
 
 
