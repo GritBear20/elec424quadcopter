@@ -97,6 +97,7 @@ class AiController():
 	self.pitchList = []
         self.yawDelta = 0.25
 	self.height = 5
+	self.front = 1000
 	self.alreadySet = False
 	self.previousHeight = 0	
 	self.f = open('errorData.txt', 'w')
@@ -219,8 +220,9 @@ class AiController():
 	self.actualData['Pitch'] = float(pitch)
 	self.actualData['Yaw'] = float(yaw)
 
-    def setHeight(self,height):
+    def setAdc(self,front,height):
         self.height = height
+        self.front = front
 
     def augmentInputWithAi(self):
         """
@@ -299,12 +301,13 @@ class AiController():
 	    self.rollList.append(self.actualData["Roll"])
 	    self.pitchList.append(self.actualData["Pitch"])
 	    self.timerError = 0
-	    print self.actualData["Yaw"]
-	    print self.height
+	    #print self.actualData["Yaw"]
+	    
 	    
 	
 	if self.timerWrite > 0.5:
-            
+            print 'height: '+str(self.height)
+            print 'front: '+str(self.front)
 	    self.timerWrite = 0
 	    string = ','.join(str(e) for e in self.rollList)
 	    string2 = ','.join(str(e) for e in self.pitchList)

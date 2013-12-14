@@ -513,6 +513,7 @@ class MainUI(QtGui.QMainWindow, main_window_class):
         adc_log_conf = LogConfig("Adc", 10)
         adc_log_conf.addVariable(LogVariable("adc.proximBottomRaw","float"))
         adc_log_conf.addVariable(LogVariable("adc.proximFrontRaw","float"))
+        adc_log_conf.addVariable(LogVariable("baro.asl","float"))
         self.adc_log = self.cf.log.create_log_packet(adc_log_conf)
         if self.adc_log is not None:
             self.adc_log.dataReceived.add_callback(self.log_adc_data)
@@ -523,4 +524,4 @@ class MainUI(QtGui.QMainWindow, main_window_class):
     def log_adc_data(self,data):
         #print "yadayada"
         #logging.info("AdcValue:bottom : %f,  front: %f" % (data["adc.proximBottomRaw"],data["adc.proximFrontRaw"]))
-        self.linkToAiController.setHeight(data["adc.proximBottomRaw"])
+        self.linkToAiController.setAdc(data["adc.proximBottomRaw"],data["baro.asl"])
