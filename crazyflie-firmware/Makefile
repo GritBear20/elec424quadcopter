@@ -7,11 +7,11 @@
 -include config.mk
 
 ######### JTAG and environment configuration ##########
-OPENOCD_INTERFACE ?= interface/jtagkey.cfg
+OPENOCD_INTERFACE ?= interface/busblaster.cfg
 OPENOCD_TARGET    ?= target/stm32f1x.cfg
 CROSS_COMPILE     ?= arm-none-eabi-
 PYTHON2           ?= python
-CLOAD             ?= 1
+CLOAD             ?= 0
 DEBUG             ?= 0
 CLOAD_SCRIPT      ?= ../crazyflie-pc-client/bin/cfloader
 
