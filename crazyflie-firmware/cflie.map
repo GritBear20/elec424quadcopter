@@ -8738,7 +8738,7 @@ LOAD /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/arm
  .debug_frame   0x00005c28       0x20 /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/../../../../arm-none-eabi/lib/armv7-m/libc.a(lib_a-strlen.o)
  .debug_frame   0x00005c48       0x2c /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/../../../../arm-none-eabi/lib/armv7-m/libc.a(lib_a-strncpy.o)
 
-.debug_str      0x00000000    0x59ddf
+.debug_str      0x00000000    0x59de0
  *(.debug_str)
  .debug_str     0x00000000    0x43035 bin/list.o
                               0x431f4 (size before relaxing)
@@ -8776,82 +8776,82 @@ LOAD /home/gritbear/bin/gcc-arm-none-eabi/bin/../lib/gcc/arm-none-eabi/4.7.3/arm
                               0x41291 (size before relaxing)
  .debug_str     0x0004c17b      0x750 bin/stm32f10x_usart.o
                               0x40503 (size before relaxing)
- .debug_str     0x0004c8cb      0x592 bin/main.o
-                              0x42555 (size before relaxing)
- .debug_str     0x0004ce5d      0x14a bin/led.o
-                              0x42552 (size before relaxing)
- .debug_str     0x0004cfa7     0x1101 bin/uart.o
-                              0x456e5 (size before relaxing)
- .debug_str     0x0004e0a8      0xc2e bin/adc.o
-                              0x44920 (size before relaxing)
- .debug_str     0x0004ecd6      0x654 bin/nrf24l01.o
+ .debug_str     0x0004c8cb      0x593 bin/main.o
+                              0x42556 (size before relaxing)
+ .debug_str     0x0004ce5e      0x14a bin/led.o
+                              0x42553 (size before relaxing)
+ .debug_str     0x0004cfa8     0x1101 bin/uart.o
+                              0x456e6 (size before relaxing)
+ .debug_str     0x0004e0a9      0xc2e bin/adc.o
+                              0x44921 (size before relaxing)
+ .debug_str     0x0004ecd7      0x654 bin/nrf24l01.o
                               0x428e7 (size before relaxing)
- .debug_str     0x0004f32a       0x28 bin/exti.o
+ .debug_str     0x0004f32b       0x28 bin/exti.o
                               0x409db (size before relaxing)
- .debug_str     0x0004f352      0x4c9 bin/nvic.o
-                              0x438c3 (size before relaxing)
- .debug_str     0x0004f81b      0x296 bin/motors.o
-                              0x4296b (size before relaxing)
- .debug_str     0x0004fab1     0x461c bin/mpu6050.o
+ .debug_str     0x0004f353      0x4c9 bin/nvic.o
+                              0x438c4 (size before relaxing)
+ .debug_str     0x0004f81c      0x296 bin/motors.o
+                              0x4296c (size before relaxing)
+ .debug_str     0x0004fab2     0x461c bin/mpu6050.o
                               0x468d1 (size before relaxing)
- .debug_str     0x000540cd      0x2ab bin/i2cdev.o
+ .debug_str     0x000540ce      0x2ab bin/i2cdev.o
                               0x43e85 (size before relaxing)
- .debug_str     0x00054378       0xef bin/i2croutines.o
+ .debug_str     0x00054379       0xef bin/i2croutines.o
                               0x434c7 (size before relaxing)
- .debug_str     0x00054467      0xa7a bin/hmc5883l.o
+ .debug_str     0x00054468      0xa7a bin/hmc5883l.o
                               0x42e0c (size before relaxing)
- .debug_str     0x00054ee1      0xe72 bin/ms5611.o
+ .debug_str     0x00054ee2      0xe72 bin/ms5611.o
                               0x447b1 (size before relaxing)
- .debug_str     0x00055d53      0x67d bin/crtp.o
-                              0x45277 (size before relaxing)
- .debug_str     0x000563d0      0x16b bin/ledseq.o
+ .debug_str     0x00055d54      0x67d bin/crtp.o
+                              0x45278 (size before relaxing)
+ .debug_str     0x000563d1      0x16b bin/ledseq.o
                               0x436a4 (size before relaxing)
- .debug_str     0x0005653b       0x3a bin/freeRTOSdebug.o
-                              0x42627 (size before relaxing)
- .debug_str     0x00056575      0xa21 bin/imu.o
+ .debug_str     0x0005653c       0x3a bin/freeRTOSdebug.o
+                              0x42628 (size before relaxing)
+ .debug_str     0x00056576      0xa21 bin/imu.o
                               0x483ed (size before relaxing)
- .debug_str     0x00056f96      0x323 bin/pm.o
-                              0x45856 (size before relaxing)
- .debug_str     0x000572b9      0x11b bin/radiolink.o
+ .debug_str     0x00056f97      0x323 bin/pm.o
+                              0x45857 (size before relaxing)
+ .debug_str     0x000572ba      0x11b bin/radiolink.o
                               0x45081 (size before relaxing)
- .debug_str     0x000573d4      0x191 bin/system.o
-                              0x4471f (size before relaxing)
- .debug_str     0x00057565       0x8a bin/comm.o
-                              0x40c14 (size before relaxing)
- .debug_str     0x000575ef       0x66 bin/console.o
+ .debug_str     0x000573d5      0x191 bin/system.o
+                              0x44720 (size before relaxing)
+ .debug_str     0x00057566       0x8a bin/comm.o
+                              0x40c15 (size before relaxing)
+ .debug_str     0x000575f0       0x66 bin/console.o
                               0x42f51 (size before relaxing)
- .debug_str     0x00057655      0x383 bin/pid.o
-                              0x44699 (size before relaxing)
- .debug_str     0x000579d8       0x4a bin/crtpservice.o
+ .debug_str     0x00057656      0x383 bin/pid.o
+                              0x4469a (size before relaxing)
+ .debug_str     0x000579d9       0x4a bin/crtpservice.o
                               0x41f57 (size before relaxing)
- .debug_str     0x00057a22      0x1ee bin/param.o
-                              0x44629 (size before relaxing)
- .debug_str     0x00057c10      0x1d1 bin/commander.o
+ .debug_str     0x00057a23      0x1ee bin/param.o
+                              0x4462a (size before relaxing)
+ .debug_str     0x00057c11      0x1d1 bin/commander.o
                               0x4266e (size before relaxing)
- .debug_str     0x00057de1      0x270 bin/controller.o
+ .debug_str     0x00057de2      0x270 bin/controller.o
                               0x4299a (size before relaxing)
- .debug_str     0x00058051      0x164 bin/sensfusion6.o
+ .debug_str     0x00058052      0x164 bin/sensfusion6.o
                               0x42401 (size before relaxing)
- .debug_str     0x000581b5      0x426 bin/stabilizer.o
-                              0x46f35 (size before relaxing)
- .debug_str     0x000585db      0x2cd bin/log.o
-                              0x45bcf (size before relaxing)
- .debug_str     0x000588a8       0x4c bin/worker.o
+ .debug_str     0x000581b6      0x426 bin/stabilizer.o
+                              0x46f36 (size before relaxing)
+ .debug_str     0x000585dc      0x2cd bin/log.o
+                              0x45bd0 (size before relaxing)
+ .debug_str     0x000588a9       0x4c bin/worker.o
                               0x4428a (size before relaxing)
- .debug_str     0x000588f4       0x13 bin/filter.o
+ .debug_str     0x000588f5       0x13 bin/filter.o
                               0x3fcb9 (size before relaxing)
- .debug_str     0x00058907       0x1a bin/cfassert.o
+ .debug_str     0x00058908       0x1a bin/cfassert.o
                               0x401bc (size before relaxing)
- .debug_str     0x00058921      0xe67 bin/configblock.o
-                              0x418cc (size before relaxing)
- .debug_str     0x00059788      0x4ce bin/eprintf.o
+ .debug_str     0x00058922      0xe67 bin/configblock.o
+                              0x418cd (size before relaxing)
+ .debug_str     0x00059789      0x4ce bin/eprintf.o
                               0x4029d (size before relaxing)
- .debug_str     0x00059c56      0x117 bin/crc.o
+ .debug_str     0x00059c57      0x117 bin/crc.o
                               0x3fe47 (size before relaxing)
- .debug_str     0x00059d6d       0x29 bin/fp16.o
+ .debug_str     0x00059d6e       0x29 bin/fp16.o
                               0x3fca2 (size before relaxing)
- .debug_str     0x00059d96       0x49 bin/version.o
-                              0x40598 (size before relaxing)
+ .debug_str     0x00059d97       0x49 bin/version.o
+                              0x40599 (size before relaxing)
 
 .debug_loc      0x00000000    0x1292e
  *(.debug_loc)
