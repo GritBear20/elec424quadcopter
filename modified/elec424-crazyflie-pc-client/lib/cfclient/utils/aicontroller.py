@@ -113,6 +113,7 @@ class AiController():
 	self.avoiding = False
 	self.prevDistanceError = 0
 	self.DistanceErrorIntegral = 0
+	self.calibrationScaleToInches = 26.52
 
 	#negative pitch equals avoiding obstacle
 	self.correctionPitchTarget = 0
@@ -291,11 +292,13 @@ class AiController():
         elif self.timer1 < self.takeoffTime + self.hoverTime + self.calibrationTime : 
 	    thrustDelta = 0;
             thrustDelta = self.adjustThrust(self.height,42)
-	    self.obstacleAvoidance(self.front, 30)
 	    if self.timer3 > 0.15:
                 #print "miramira"
                 self.timer3 = 0
                 self.addYaw(self.yawDelta)
+	    
+	    #self.obstacleAvoidance(self.front, 30)
+
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime + self.calibrationTime :
 	    if self.aiData["thrust"] <= self.minLandingThrust:
@@ -423,11 +426,14 @@ class AiController():
         kp = 0.1
         ki = 0.0000
         kd = 5
+
+	sensorHeight = sensorHeight * self.calibrationScaleToInches
 	diff = sensorHeight - targetHeight
         self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight
 	
-	#print diff
+	print sensorHeight
+
 	self.previousHeight = sensorHeight
 	thrustDelta = -(diff * kp + ki * self.heighErrorIntegral + kd*heightDiv)
 	
