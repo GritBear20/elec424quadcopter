@@ -95,12 +95,20 @@ class AiController():
 	self.timerWrite = 0
 	self.rollList = []
 	self.pitchList = []
+
+        #=============Height and Yaw==========
+	
 	self.calibrationHeightList = []
         self.yawDelta = 0.12
         self.startHeight = 0.0
         self.isCalibrating = True
 	self.height = 5.0
 	self.front = 1000
+	self.smoothingHeightList = []
+	self.smoothingCnt = 10
+	
+
+	#=====================================
 	self.alreadySet = False
 	self.previousHeight = 0	
 	self.f = open('errorData.txt', 'w')
@@ -239,7 +247,11 @@ class AiController():
         if self.isCalibrating:
             self.height = height
         else:
-            self.height = height - self.startHeight
+            if len(self.smoothingHeightList)<50:
+                self.smoothingHeightList.append(height - self.startHeight)
+            else:
+                self.height = sum(self.smoothingHeightList)/len(self.smoothingHeightList)
+                self.smoothingHeightList = []
         self.front = front
 
     def augmentInputWithAi(self):
