@@ -103,7 +103,18 @@ class AiController():
 	self.f = open('errorData.txt', 'w')
 	self.froll = open('errorDataRoll.txt', 'w')
 	self.fpitch = open('errorDataPitch.txt', 'w')
-	self.actualData={'Roll':0,'Pitch':0,'Yaw':0}
+	self.actualData = {'Roll':0,'Pitch':0,'Yaw':0}
+
+	#==============================================================
+	#variables related to pitch-based avoid
+	self.avoiding = False
+	self.prevDistanceError = 0
+	self.DistanceErrorIntegral = 0
+
+	#negative pitch equals avoiding obstacle
+	self.correctionPitchTarget = 0
+	self.minControlPitch = -30;
+	#==============================================================
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
@@ -279,6 +290,7 @@ class AiController():
         elif self.timer1 < self.takeoffTime + self.hoverTime : 
 	    thrustDelta = 0;
             thrustDelta = self.adjustThrust(self.height,42)
+	    obstacleAvoidance(self, self.front, 30)
 	    if self.timer3 > 0.15:
                 #print "miramira"
                 self.timer3 = 0
@@ -354,68 +366,6 @@ class AiController():
         if (self.aiData["yaw"] > 0.72):
             self.aiData["yaw"] = self.aiData["yaw"] - 1.44
 	 
-        
-        
-    # ELEC424 TODO: Implement this function
-    def pidTuner(self):
-	key = ''
-	
-	tuneRates = [1.2,1.1,1.05,1.01]
-	fixGroup=['sensorfusion6.ki',"imu_acc_lpf.factor","sensorfusion6.kp",'pid_rate.yaw_kp', 'pid_rate.yaw_kd', 'pid_rate.yaw_ki','pid_attitude.pitch_kp']
-	changeGroup=['pid_rate.pitch_kp']
-        for k in self.cfParams:
-            if k in changeGroup:
-                key = k
-                #print key
-                tuneScale = tuneRates[self.attempedOnSameParamter]
-                if self.cfParamsFlag[k] == 0:
-                    self.cfParamsFlag[k] = 1 #it starts to increase
-                    self.cfParams[k] = self.cfParams[k] * tuneScale
-                    self.minError = self.error #restart for everyvalue
-                    break
-                elif self.cfParamsFlag[k] == 1:
-                    if self.error < self.minError:
-                        self.cfParams[k] = self.cfParams[k] * tuneScale
-                        self.minError = self.error
-                        break
-                    else:
-                        self.cfParamsFlag[k] = 2 #it starts to decrease
-                        self.cfParams[k] = self.cfParams[k] / tuneScale
-                        break
-
-                elif self.cfParamsFlag[k] == 2:
-                    if self.error < self.minError:
-                        self.cfParams[k] = self.cfParams[k] / tuneScale
-                        self.minError = self.error
-                        break
-                    else:
-                        if self.attempedOnSameParamter < 3:
-                            self.attempedOnSameParamter = self.attempedOnSameParamter + 1
-                            self.cfParamsFlag[k] = 0
-                        else:
-                            self.cfParamsFlag[k] = 3 #it achieved optimal value
-                            self.cfParams[k] = self.cfParams[k] * tuneScale
-                            self.attempedOnSameParamter = 0
-                        break
-
-        self.error = 0
-	print str(key) + ":" + str(self.minError) + ":" + str(self.cfParams[key])
-	self.updateCrazyFlieParam(key)
-	
-    def zieglerTuning(self):
-        for param in cfParams:
-            if "kp" in param:
-                break
-        pass
-    
-    #update using the goodness function
-    def updateError(self):
- 	#currentTime = time.time()
-	#curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
-	#self.outputStr = str(currentTime) + ";" + str(curError) + "\n"
-	#self.f.write(self.outputStr)
-	self.error = self.error + abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"]) + abs(self.actualData["Yaw"]) * 0.0
-	
 
     # update via param.py -> radiodriver.py -> crazyradio.py -> usbRadio )))
     def updateCrazyFlieParam(self, completename ):
@@ -486,3 +436,43 @@ class AiController():
 	#print self.aiData["thrust"]
 	#print self.data["thrust"]
 	return thrustDelta
+
+    def obstacleAvoidance(self, sensorDistance, targetDistance):
+	self.avoiding=false
+	if(sensorDistance <= targetDistance):
+	    self.avoiding=True
+	else:
+	    self.avoiding=False
+	
+	if(self.avoiding):
+   	    pitchDelta = pitchPID(sensorDistance, targetDistance)
+	    self.correctionPitchTarget = self.correctionPitchTarget + pitchDelta
+	else:
+	    self.prevDistanceError = 0
+	    self.DistanceErrorIntegral = 0
+	    self.correctionPitchTarget = 0
+	
+
+	self.aiData["pitch"] = self.correctionPitchTarget
+
+
+    def pitchPID(self, sensorDistance, targetDistance):
+	kp = 0.1
+        ki = 0.0000
+        kd = 5
+
+	diff = sensorDistance - targetDistance
+        self.DistanceErrorIntegral = self.DistanceErrorIntegral + diff
+	distanceDiv = sensorDistance - self.prevDistanceError
+	
+	#print diff
+	self.prevDistanceError = sensorDistance
+	pitchDelta = -(diff * kp + ki * self.DistanceErrorIntegral + kd*heightDiv)
+	
+	if(self.aiData["pitch"] < self.minControlPitch):
+	    self.aiData["pitch"] = self.minControlPitch
+	    pitchDelta = 0
+	#print self.aiData["thrust"]
+	#print self.data["thrust"]
+	return pitchDelta
+	
