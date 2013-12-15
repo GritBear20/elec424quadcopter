@@ -122,13 +122,13 @@ class AiController():
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
         self.maxThrust = 0.9
-        self.calibrationTime = 0.5
+        self.calibrationTime = 1.5
         # Determines how fast to take off
         self.thrustInc = 0.001
         self.takeoffTime = 0.6
         # Determines how fast to land
         self.thrustDec = -0.01
-        self.hoverTime = 20
+        self.hoverTime = 10000
         # Sets the delay between test flights
         self.repeatDelay = 2
 
@@ -261,24 +261,12 @@ class AiController():
 	self.timerError = self.timerError + timeSinceLastAi
 	self.timerWrite = self.timerWrite + timeSinceLastAi
         self.lastTime = currentTime
-        self.updateError()
 
 	if not self.alreadySet:
 	    self.alreadySet = True
 	    for key in self.cfParams:
 		self.updateCrazyFlieParam(key)
             
-        if not(self.checkOptimizationFinished()):
-            if self.timer2 > self.trainingInterval:
-                #print "miramira"
-                #print self.timer2
-                #self.pidTuner()
-                #self.timer2 = 0
-                
-                pass
-	else:
-	    print "Optimization finished"
-	    self.initFlag()
 
 	#self.aiData["yaw"] = 1
         
@@ -291,19 +279,19 @@ class AiController():
         # calibration
         elif self.timer1 < self.calibrationTime :
             thrustDelta = 0
-            self.calibrationHeight.append(self.height)
+            self.calibrationHeightList.append(self.height)
         
         # takeoff
         elif self.timer1 < self.takeoffTime + self.calibrationTime :
             self.isCalibrating = False
-            self.startHeight = float(sum(self.calibrationHeight)/len(self.calibrationHeight))
+            self.startHeight = float(sum(self.calibrationHeightList)/len(self.calibrationHeightList))
             thrustDelta = self.thrustInc
 	    
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime + self.calibrationTime : 
 	    thrustDelta = 0;
             thrustDelta = self.adjustThrust(self.height,42)
-	    obstacleAvoidance(self, self.front, 30)
+	    self.obstacleAvoidance(self.front, 30)
 	    if self.timer3 > 0.15:
                 #print "miramira"
                 self.timer3 = 0
@@ -451,14 +439,13 @@ class AiController():
 	return thrustDelta
 
     def obstacleAvoidance(self, sensorDistance, targetDistance):
-	self.avoiding=false
 	if(sensorDistance <= targetDistance):
 	    self.avoiding=True
 	else:
 	    self.avoiding=False
 	
 	if(self.avoiding):
-   	    pitchDelta = pitchPID(sensorDistance, targetDistance)
+   	    pitchDelta = self.pitchPID(sensorDistance, targetDistance)
 	    self.correctionPitchTarget = self.correctionPitchTarget + pitchDelta
 	else:
 	    self.prevDistanceError = 0
@@ -480,7 +467,7 @@ class AiController():
 	
 	#print diff
 	self.prevDistanceError = sensorDistance
-	pitchDelta = -(diff * kp + ki * self.DistanceErrorIntegral + kd*heightDiv)
+	pitchDelta = -(diff * kp + ki * self.DistanceErrorIntegral + kd*distanceDiv)
 	
 	if(self.aiData["pitch"] < self.minControlPitch):
 	    self.aiData["pitch"] = self.minControlPitch
