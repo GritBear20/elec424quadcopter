@@ -1,18 +1,19 @@
 {
   "device_config_mapping": {
     "Pro Ex": "PS3_Mode_2", 
-    "Microsoft X-Box 360 pad": "xbox360_mode1", 
-    "BDA Pro Ex": "PS3_Mode_2"
+    "BDA Pro Ex": "PS3_Mode_2", 
+    "Controller": "xbox360_mode1", 
+    "Microsoft X-Box 360 pad": "xbox360_mode1"
   }, 
   "slew_rate": 30, 
   "client_side_xmode": false, 
   "auto_reconnect": false, 
-  "input_device": "Microsoft X-Box 360 pad", 
+  "input_device": "Controller", 
   "link_uri": "radio://0/101/250K", 
   "max_yaw": 200, 
   "flightmode": "Advanced", 
   "max_rp": 30, 
-  "open_tabs": "Flight Control,Log TOC,Parameters,Plotter", 
+  "open_tabs": "Flight Control,Log TOC,Parameters", 
   "trim_pitch": 0.0, 
   "slew_limit": 45, 
   "trim_roll": 0.0, 
