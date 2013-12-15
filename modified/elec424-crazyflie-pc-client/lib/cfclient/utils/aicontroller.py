@@ -472,8 +472,6 @@ class AiController():
         kp = 0.1
         ki = 0.0000
         kd = 5
-        print "height"
-        print sensorHeight
 	diff = sensorHeight - targetHeight
         self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight
