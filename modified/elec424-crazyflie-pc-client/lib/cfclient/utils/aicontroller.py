@@ -86,7 +86,7 @@ class AiController():
 	self.minError = 100000000 
 	self.attempedOnSameParamter = 0
 	self.minLandingThrust = 0.60
-	self.minControlThrust = 0.65
+	self.minControlThrust = 0.72
 	self.trainingInterval = 0.3
         self.lastTrained = 0.0
         self.timer2 = 0
@@ -248,11 +248,12 @@ class AiController():
         if self.isCalibrating:
             self.height = height
         else:
-            if len(self.smoothingHeightList)<50:
+            '''if len(self.smoothingHeightList)<50:
                 self.smoothingHeightList.append(height - self.startHeight)
             else:
                 self.height = sum(self.smoothingHeightList)/len(self.smoothingHeightList)
-                self.smoothingHeightList = []
+                self.smoothingHeightList = []'''
+	    self.height = height - self.startHeight
         self.front = front
 
     def augmentInputWithAi(self):
@@ -303,7 +304,7 @@ class AiController():
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime + self.calibrationTime : 
 	    thrustDelta = 0;
-            thrustDelta = self.adjustThrust(self.height,42)
+            thrustDelta = self.adjustThrust(self.height,36)
 	    if self.timer3 > 0.15:
                 #print "miramira"
                 self.timer3 = 0
@@ -435,7 +436,7 @@ class AiController():
         return dev
 
     def adjustThrust(self, sensorHeight, targetHeight):
-        kp = 0.1
+        kp = 0.2
         ki = 0.0000
         kd = 5
 
@@ -452,7 +453,7 @@ class AiController():
 	if(self.aiData["thrust"] < self.minControlThrust):
 	    self.aiData["thrust"] = self.minControlThrust
 	    thrustDelta = 0
-	#print self.aiData["thrust"]
+	print self.aiData["thrust"]
 	#print self.data["thrust"]
 	return thrustDelta
 
