@@ -1,0 +1,18 @@
+{
+  "logconfig": {
+    "logblock": {
+      "max": 180, 
+      "variables": [
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.yaw", 
+          "fetch_as": "float"
+        }
+      ], 
+      "min": -180, 
+      "name": "Yaw", 
+      "period": 10
+    }
+  }
+}

@@ -96,17 +96,19 @@ class AiController():
 	self.rollList = []
 	self.pitchList = []
 
-        #=============Height and Yaw==========
+        #=============Height and yaw==========
 	
 	self.calibrationHeightList = []
-        self.yawDelta = 0.12
+        self.yawDelta = 20
+	self.yawUpdateInterval = 2
         self.startHeight = 0.0
         self.isCalibrating = True
 	self.height = 5.0
 	self.front = 1000
 	self.smoothingHeightList = []
 	self.smoothingCnt = 10
-	
+	self.yawTargetList = [0,40,80,120,160,120,80,40,0,-40,-80,-120,-160,-120,-80,-40]
+	self.yawIter = 0
 
 	#=====================================
 	self.alreadySet = False
@@ -114,7 +116,7 @@ class AiController():
 	self.f = open('errorData.txt', 'w')
 	self.froll = open('errorDataRoll.txt', 'w')
 	self.fpitch = open('errorDataPitch.txt', 'w')
-	self.actualData = {'Roll':0,'Pitch':0,'Yaw':0}
+	self.actualData = {'Roll':0,'Pitch':0,'yaw':0}
 
 	#==============================================================
 	#variables related to pitch-based avoid
@@ -125,16 +127,16 @@ class AiController():
 
 	#negative pitch equals avoiding obstacle
 	self.correctionPitchTarget = 0
-	self.minControlPitch = -30;
+	self.minControlPitch = -2;
 	#==============================================================
 
         # ---AI tuning variables---
         # This is the thrust of the motors duing hover.  0.5 reaches ~1ft depending on battery
-        self.maxThrust = 0.9
+        self.maxThrust = 0.99
         self.calibrationTime = 1.5
         # Determines how fast to take off
         self.thrustInc = 0.001
-        self.takeoffTime = 0.6
+        self.takeoffTime = 0.5
         # Determines how fast to land
         self.thrustDec = -0.01
         self.hoverTime = 10000
@@ -150,7 +152,7 @@ class AiController():
             'pid_rate.roll_kp': 400.0,
             'pid_rate.roll_kd': 0.0,
             'pid_rate.roll_ki': 0.5,
-            'pid_rate.yaw_kp': 40.0,
+            'pid_rate.yaw_kp': 50.0,
             'pid_rate.yaw_kd': 0.0,
             'pid_rate.yaw_ki': 25.0,
             'pid_attitude.pitch_kp': 4.0,
@@ -242,7 +244,7 @@ class AiController():
     def setActualData(self,roll,pitch,yaw):
 	self.actualData['Roll'] = float(roll)
 	self.actualData['Pitch'] = float(pitch)
-	self.actualData['Yaw'] = float(yaw)
+	self.actualData['yaw'] = float(yaw)
 
     def setAdc(self,front,height):
         if self.isCalibrating:
@@ -305,12 +307,12 @@ class AiController():
         elif self.timer1 < self.takeoffTime + self.hoverTime + self.calibrationTime : 
 	    thrustDelta = 0;
             thrustDelta = self.adjustThrust(self.height,36)
-	    if self.timer3 > 0.15:
+	    if self.timer3 >self.yawUpdateInterval:
                 #print "miramira"
                 self.timer3 = 0
-                self.addYaw(self.yawDelta)
+                #self.addyaw()
 	    
-	    self.obstacleAvoidance(self.front, 30)
+	    #self.obstacleAvoidance(self.front, 24)
 
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime + self.calibrationTime :
@@ -330,7 +332,7 @@ class AiController():
 	    self.rollList.append(self.actualData["Roll"])
 	    self.pitchList.append(self.actualData["Pitch"])
 	    self.timerError = 0
-	    #print self.actualData["Yaw"]
+	    #print self.actualData["yaw"]
 	    
 	    
 	
@@ -356,7 +358,7 @@ class AiController():
         # override Other inputs as needed
         # --------------------------------------------------------------
         # self.data["roll"] = self.aiData["roll"]
-        # self.data["pitch"] = self.aiData["pitch"]
+        self.data["pitch"] = self.aiData["pitch"]
         self.data["yaw"] = self.aiData["yaw"]
         # self.data["pitchcal"] = self.aiData["pitchcal"]
         # self.data["rollcal"] = self.aiData["rollcal"]
@@ -378,13 +380,26 @@ class AiController():
 	#self.data["pitch"] = 0
 	#self.data["roll"] = 0
 
-    def addYaw(self,yawDelta):
+    def addyaw(self):
 	# do not change yaw when crazyflie is avoiding obstacles
+	
 	if not self.avoiding:
-	    self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
-	    if (self.aiData["yaw"] > 0.72):
-		self.aiData["yaw"] = self.aiData["yaw"] - 1.44
-	 
+	    print "Actual yaw"
+	    print self.actualData['yaw']
+	    print self.yawTargetList[self.yawIter]
+	    #self.aiData["yaw"] = self.convertDegreeToTarget(self.actualData['yaw'] + self.yawDelta)
+	    self.aiData["yaw"] = self.convertDegreeToTarget(self.yawTargetList[self.yawIter])
+	    self.yawIter = (self.yawIter+1)%len(self.yawTargetList)
+	    
+	
+    def convertDegreeToTarget(self, targetDegree):
+	k = 0.72/180/6*40
+	if(targetDegree > 0):
+	    return targetDegree * k + 0.2
+	elif(targetDegree<0):
+	    return targetDegree * k - 0.2
+	else:
+	    return 0
 
     # update via param.py -> radiodriver.py -> crazyradio.py -> usbRadio )))
     def updateCrazyFlieParam(self, completename ):
@@ -438,17 +453,17 @@ class AiController():
         return dev
 
     def adjustThrust(self, sensorHeight, targetHeight):
-        kp = 0.2
+        kp = 0.1
         ki = 0.0000
-        kd = 3 #the new sensor has much higher noise -> smaller kd to be safe
+        kd = 5 #the new sensor has much higher noise -> smaller kd to be safe
 
 	sensorHeight = sensorHeight * self.calibrationScaleToInches
 	diff = sensorHeight - targetHeight
         self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight
 	
-	print "height"
-	print sensorHeight
+	#print "height"
+	#print sensorHeight
 
 	self.previousHeight = sensorHeight
 	thrustDelta = -(diff * kp + ki * self.heighErrorIntegral + kd*heightDiv)
@@ -456,8 +471,8 @@ class AiController():
 	if(self.aiData["thrust"] < self.minControlThrust):
 	    self.aiData["thrust"] = self.minControlThrust
 	    thrustDelta = 0
-	print "thrust"
-	print self.aiData["thrust"]
+	#print "thrust"
+	#print self.aiData["thrust"]
 	#print self.data["thrust"]
 	return thrustDelta
 
@@ -468,6 +483,7 @@ class AiController():
 	    self.avoiding=False
 	
 	if(self.avoiding):
+	    self.aiData["yaw"] = self.convertDegreeToTarget(self.actualData['yaw'])
    	    pitchDelta = self.pitchPID(sensorDistance, targetDistance)
 	    self.correctionPitchTarget = self.correctionPitchTarget + pitchDelta
 	    print "pitch target:"
@@ -481,9 +497,9 @@ class AiController():
 
 
     def pitchPID(self, sensorDistance, targetDistance):
-	kp = 0.05
+	kp = 0.001
         ki = 0.0000
-        kd = 1
+        kd = 0.01
 
 	diff = sensorDistance - targetDistance
         self.DistanceErrorIntegral = self.DistanceErrorIntegral + diff
@@ -492,8 +508,6 @@ class AiController():
 	#print diff
 	self.prevDistanceError = sensorDistance
 	pitchDelta = (diff * kp + ki * self.DistanceErrorIntegral + kd*distanceDiv)
-
-	self.aiData["pitch"] = self.aiData["pitch"] + pitchDelta;
 
 	if(self.correctionPitchTarget < self.minControlPitch):
 	    self.correctionPitchTarget = self.minControlPitch
