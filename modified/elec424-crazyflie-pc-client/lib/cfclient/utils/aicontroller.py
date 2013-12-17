@@ -99,8 +99,10 @@ class AiController():
         #=============Height and yaw==========
 	
 	self.calibrationHeightList = []
-        self.yawDelta = 20
-	self.yawUpdateInterval = 2
+        self.yawDelta = 10
+
+	self.yawUpdateInterval = 0.5
+
         self.startHeight = 0.0
         self.isCalibrating = True
 	self.height = 5.0
@@ -108,15 +110,16 @@ class AiController():
 	self.smoothingHeightList = []
 	self.smoothingCnt = 10
 	self.yawTargetList = [0,40,80,120,160,120,80,40,0,-40,-80,-120,-160,-120,-80,-40]
+	#self.yawTargetList = [0,40,80,120,160,-160,-120,-80,-40]
 	self.yawIter = 0
 
 	#=====================================
 	self.alreadySet = False
 	self.previousHeight = 0	
 	self.f = open('errorData.txt', 'w')
-	self.froll = open('errorDataRoll.txt', 'w')
-	self.fpitch = open('errorDataPitch.txt', 'w')
-	self.actualData = {'Roll':0,'Pitch':0,'yaw':0}
+	self.froll = open('errorDataroll.txt', 'w')
+	self.fpitch = open('errorDatapitch.txt', 'w')
+	self.actualData = {'roll':0,'pitch':0,'yaw':0}
 
 	#==============================================================
 	#variables related to pitch-based avoid
@@ -126,8 +129,8 @@ class AiController():
 	self.calibrationScaleToInches = 26.52
 
 	#negative pitch equals avoiding obstacle
-	self.correctionPitchTarget = 0
-	self.minControlPitch = -2;
+	self.correctionpitchrollTarget = 0
+	self.controlpitchroll = 2; #30 degrees = 1
 	#==============================================================
 
         # ---AI tuning variables---
@@ -136,7 +139,7 @@ class AiController():
         self.calibrationTime = 1.5
         # Determines how fast to take off
         self.thrustInc = 0.001
-        self.takeoffTime = 0.5
+        self.takeoffTime = 0.35
         # Determines how fast to land
         self.thrustDec = -0.01
         self.hoverTime = 10000
@@ -146,7 +149,7 @@ class AiController():
         # parameters pulled from json with defaults from crazyflie pid.h
         # perl -ne '/"(\w*)": {/ && print $1,  "\n" ' lib/cflib/cache/27A2C4BA.json
         self.cfParams = {
-            'pid_rate.pitch_kp': 600.0,
+            'pid_rate.pitch_kp': 400.0,
             'pid_rate.pitch_kd': 0.0,
             'pid_rate.pitch_ki': 1.5,
             'pid_rate.roll_kp': 400.0,
@@ -242,8 +245,8 @@ class AiController():
 
     # ELEC424 TODO:  Improve this function as needed
     def setActualData(self,roll,pitch,yaw):
-	self.actualData['Roll'] = float(roll)
-	self.actualData['Pitch'] = float(pitch)
+	self.actualData['roll'] = float(roll)
+	self.actualData['pitch'] = float(pitch)
 	self.actualData['yaw'] = float(yaw)
 
     def setAdc(self,front,height):
@@ -310,9 +313,9 @@ class AiController():
 	    if self.timer3 >self.yawUpdateInterval:
                 #print "miramira"
                 self.timer3 = 0
-                #self.addyaw()
+                self.addyaw()
 	    
-	    #self.obstacleAvoidance(self.front, 24)
+	    self.obstacleAvoidance(self.front, 24)
 
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime + self.calibrationTime :
@@ -329,8 +332,8 @@ class AiController():
         self.addThrust( thrustDelta )
 
  	if self.timerError > 0.1:
-	    self.rollList.append(self.actualData["Roll"])
-	    self.pitchList.append(self.actualData["Pitch"])
+	    self.rollList.append(self.actualData["roll"])
+	    self.pitchList.append(self.actualData["pitch"])
 	    self.timerError = 0
 	    #print self.actualData["yaw"]
 	    
@@ -347,18 +350,18 @@ class AiController():
 	    self.f.write(string2)
 	    self.f.write("\n\n End\n\n")
 	
-	    '''curError = abs(self.actualData["Roll"]) + abs(self.actualData["Pitch"])
-	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["Roll"])) + "\n"
+	    '''curError = abs(self.actualData["roll"]) + abs(self.actualData["pitch"])
+	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["roll"])) + "\n"
 	    self.f.write(self.outputStr)
-	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["Roll"])) + "\n"
+	    self.outputStr = str(currentTime) + ";" + str(abs(self.actualData["roll"])) + "\n"
 	    self.f.write(self.outputStr)'''
 
             
 
         # override Other inputs as needed
         # --------------------------------------------------------------
-        # self.data["roll"] = self.aiData["roll"]
-        self.data["pitch"] = self.aiData["pitch"]
+        self.data["roll"] = self.aiData["roll"]
+        #self.data["pitch"] = self.aiData["pitch"]
         self.data["yaw"] = self.aiData["yaw"]
         # self.data["pitchcal"] = self.aiData["pitchcal"]
         # self.data["rollcal"] = self.aiData["rollcal"]
@@ -393,7 +396,7 @@ class AiController():
 	    
 	
     def convertDegreeToTarget(self, targetDegree):
-	k = 0.72/180/6*40
+	k = 0.72/180/6*40/266.666*40
 	if(targetDegree > 0):
 	    return targetDegree * k + 0.2
 	elif(targetDegree<0):
@@ -484,19 +487,20 @@ class AiController():
 	
 	if(self.avoiding):
 	    self.aiData["yaw"] = self.convertDegreeToTarget(self.actualData['yaw'])
-   	    pitchDelta = self.pitchPID(sensorDistance, targetDistance)
-	    self.correctionPitchTarget = self.correctionPitchTarget + pitchDelta
-	    print "pitch target:"
-	    print self.correctionPitchTarget
+   	    pitchrollDelta = self.pitchrollPID(sensorDistance, targetDistance)
+	    self.correctionpitchrollTarget = self.correctionpitchrollTarget + pitchrollDelta
+	    #print "Object Detected!"	    
+	    print "roll target:"
+	    print self.correctionpitchrollTarget
 	else:
 	    self.prevDistanceError = 0
 	    self.DistanceErrorIntegral = 0
-	    self.correctionPitchTarget = 0
+	    self.correctionpitchrollTarget = 0
 	
-	self.aiData["pitch"] = self.correctionPitchTarget
+	self.aiData["roll"] = self.correctionpitchrollTarget
 
 
-    def pitchPID(self, sensorDistance, targetDistance):
+    def pitchrollPID(self, sensorDistance, targetDistance):
 	kp = 0.001
         ki = 0.0000
         kd = 0.01
@@ -507,18 +511,18 @@ class AiController():
 	
 	#print diff
 	self.prevDistanceError = sensorDistance
-	pitchDelta = (diff * kp + ki * self.DistanceErrorIntegral + kd*distanceDiv)
+	pitchrollDelta = -(diff * kp + ki * self.DistanceErrorIntegral + kd*distanceDiv)
 
-	if(self.correctionPitchTarget < self.minControlPitch):
-	    self.correctionPitchTarget = self.minControlPitch
-	    pitchDelta = 0
+	if(self.correctionpitchrollTarget > self.controlpitchroll):
+	    self.correctionpitchrollTarget = self.controlpitchroll
+	    pitchrollDelta = 0
 	
 	#max should be 0
-	if(self.correctionPitchTarget >= 0):
-		self.correctionPitchTarget  = 0
+	if(self.correctionpitchrollTarget <= 0):
+		self.correctionpitchrollTarget  = 0
 	
-	print "Pitch tune:"
-	print pitchDelta
+	print "pitch tune:"
+	print pitchrollDelta
 
-	return pitchDelta
+	return pitchrollDelta
 	

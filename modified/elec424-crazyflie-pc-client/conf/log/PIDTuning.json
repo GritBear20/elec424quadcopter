@@ -1,0 +1,30 @@
+{
+  "logconfig": {
+    "logblock": {
+      "max": 180, 
+      "variables": [
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.pitch", 
+          "fetch_as": "float"
+        }, 
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.roll", 
+          "fetch_as": "float"
+        }, 
+        {
+          "stored_as": "float", 
+          "type": "TOC", 
+          "name": "stabilizer.yaw", 
+          "fetch_as": "float"
+        }
+      ], 
+      "min": -180, 
+      "name": "PIDTuning", 
+      "period": 10
+    }
+  }
+}
