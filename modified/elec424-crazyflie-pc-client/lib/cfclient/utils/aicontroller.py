@@ -310,7 +310,7 @@ class AiController():
                 self.timer3 = 0
                 self.addYaw(self.yawDelta)
 	    
-	    #self.obstacleAvoidance(self.front, 30)
+	    self.obstacleAvoidance(self.front, 30)
 
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime + self.calibrationTime :
@@ -379,9 +379,11 @@ class AiController():
 	#self.data["roll"] = 0
 
     def addYaw(self,yawDelta):
-        self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
-        if (self.aiData["yaw"] > 0.72):
-            self.aiData["yaw"] = self.aiData["yaw"] - 1.44
+	# do not change yaw when crazyflie is avoiding obstacles
+	if not self.avoiding:
+	    self.aiData["yaw"] = self.aiData["yaw"] + self.yawDelta
+	    if (self.aiData["yaw"] > 0.72):
+		self.aiData["yaw"] = self.aiData["yaw"] - 1.44
 	 
 
     # update via param.py -> radiodriver.py -> crazyradio.py -> usbRadio )))
@@ -471,7 +473,8 @@ class AiController():
 	    self.DistanceErrorIntegral = 0
 	    self.correctionPitchTarget = 0
 	
-
+	print "pitch target:"
+	print self.correctionPitchTarget
 	self.aiData["pitch"] = self.correctionPitchTarget
 
 
@@ -486,12 +489,20 @@ class AiController():
 	
 	#print diff
 	self.prevDistanceError = sensorDistance
-	pitchDelta = -(diff * kp + ki * self.DistanceErrorIntegral + kd*distanceDiv)
-	
-	if(self.aiData["pitch"] < self.minControlPitch):
-	    self.aiData["pitch"] = self.minControlPitch
+	pitchDelta = (diff * kp + ki * self.DistanceErrorIntegral + kd*distanceDiv)
+
+	self.aiData["pitch"] = self.aiData["pitch"] + pitchDelta;
+
+	if(self.correctionPitchTarget < self.minControlPitch):
+	    self.correctionPitchTarget = self.minControlPitch
 	    pitchDelta = 0
-	#print self.aiData["thrust"]
-	#print self.data["thrust"]
+	
+	#max should be 0
+	if(self.correctionPitchTarget >= 0):
+		self.correctionPitchTarget  = 0
+	
+	print "Pitch tune:"
+	print pitchDelta
+
 	return pitchDelta
 	
