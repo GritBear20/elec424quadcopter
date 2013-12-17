@@ -440,13 +440,14 @@ class AiController():
     def adjustThrust(self, sensorHeight, targetHeight):
         kp = 0.2
         ki = 0.0000
-        kd = 5
+        kd = 3 #the new sensor has much higher noise -> smaller kd to be safe
 
 	sensorHeight = sensorHeight * self.calibrationScaleToInches
 	diff = sensorHeight - targetHeight
         self.heighErrorIntegral = self.heighErrorIntegral + diff
 	heightDiv = sensorHeight - self.previousHeight
 	
+	print "height"
 	print sensorHeight
 
 	self.previousHeight = sensorHeight
@@ -455,6 +456,7 @@ class AiController():
 	if(self.aiData["thrust"] < self.minControlThrust):
 	    self.aiData["thrust"] = self.minControlThrust
 	    thrustDelta = 0
+	print "thrust"
 	print self.aiData["thrust"]
 	#print self.data["thrust"]
 	return thrustDelta
@@ -468,20 +470,20 @@ class AiController():
 	if(self.avoiding):
    	    pitchDelta = self.pitchPID(sensorDistance, targetDistance)
 	    self.correctionPitchTarget = self.correctionPitchTarget + pitchDelta
+	    print "pitch target:"
+	    print self.correctionPitchTarget
 	else:
 	    self.prevDistanceError = 0
 	    self.DistanceErrorIntegral = 0
 	    self.correctionPitchTarget = 0
 	
-	print "pitch target:"
-	print self.correctionPitchTarget
 	self.aiData["pitch"] = self.correctionPitchTarget
 
 
     def pitchPID(self, sensorDistance, targetDistance):
-	kp = 0.1
+	kp = 0.05
         ki = 0.0000
-        kd = 5
+        kd = 1
 
 	diff = sensorDistance - targetDistance
         self.DistanceErrorIntegral = self.DistanceErrorIntegral + diff
