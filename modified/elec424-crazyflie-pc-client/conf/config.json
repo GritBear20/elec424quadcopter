@@ -1,9 +1,9 @@
 {
   "device_config_mapping": {
-    "Microsoft X-Box 360 pad": "xbox360_mode1", 
     "Pro Ex": "PS3_Mode_2", 
+    "BDA Pro Ex": "PS3_Mode_2", 
     "Controller": "xbox360_mode1", 
-    "BDA Pro Ex": "PS3_Mode_2"
+    "Microsoft X-Box 360 pad": "xbox360_mode1"
   }, 
   "slew_rate": 30, 
   "client_side_xmode": false, 

@@ -101,7 +101,7 @@ class AiController():
 	self.calibrationHeightList = []
         self.yawDelta = 10
 
-	self.yawUpdateInterval = 0.5
+	self.yawUpdateInterval = 2
 
         self.startHeight = 0.0
         self.isCalibrating = True
@@ -109,7 +109,9 @@ class AiController():
 	self.front = 1000
 	self.smoothingHeightList = []
 	self.smoothingCnt = 10
-	self.yawTargetList = [0,40,80,120,160,120,80,40,0,-40,-80,-120,-160,-120,-80,-40]
+	#self.yawTargetList = [0,40,80,120,160,120,80,40,0,-40,-80,-120,-160,-120,-80,-40]
+	#self.yawTargetList = [0,90,170,190,-150,-90]
+	self.yawTargetList = [200]
 	#self.yawTargetList = [0,40,80,120,160,-160,-120,-80,-40]
 	self.yawIter = 0
 
@@ -130,7 +132,7 @@ class AiController():
 
 	#negative pitch equals avoiding obstacle
 	self.correctionpitchrollTarget = 0
-	self.controlpitchroll = 2; #30 degrees = 1
+	self.controlpitchroll = 1.5; #30 degrees = 1
 	#==============================================================
 
         # ---AI tuning variables---
@@ -309,13 +311,13 @@ class AiController():
         # hold
         elif self.timer1 < self.takeoffTime + self.hoverTime + self.calibrationTime : 
 	    thrustDelta = 0;
-            thrustDelta = self.adjustThrust(self.height,36)
+            thrustDelta = self.adjustThrust(self.height,42)
 	    if self.timer3 >self.yawUpdateInterval:
                 #print "miramira"
                 self.timer3 = 0
                 self.addyaw()
 	    
-	    self.obstacleAvoidance(self.front, 24)
+	    self.obstacleAvoidance(self.front, 30)
 
         # land
         elif self.timer1 < 2 * self.takeoffTime + self.hoverTime + self.calibrationTime :
@@ -501,7 +503,7 @@ class AiController():
 
 
     def pitchrollPID(self, sensorDistance, targetDistance):
-	kp = 0.001
+	kp = 0.0005
         ki = 0.0000
         kd = 0.01
 
